@@ -32,6 +32,56 @@
 <body>
 
   <!-- ====================================================================== -->
+  <!-- AUTHENTICATION & SIGN-IN OVERLAY (Catalyst Auth & Role-Based Views)   -->
+  <!-- ====================================================================== -->
+  <div class="login-overlay" id="login-overlay" style="display: none;">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-brand">
+          <i class="fa-solid fa-heart-pulse"></i>
+          <h1>AED Remind</h1>
+        </div>
+        <div class="login-subtext">Life Safety Compliance Management Portal</div>
+      </div>
+
+      <div class="login-error-msg" id="login-error-msg" style="display: none;"></div>
+
+      <form id="login-form" class="login-form" onsubmit="handlePortalLogin(event)">
+        <div class="login-field-group">
+          <label for="login-email">Account Email</label>
+          <div class="login-input-wrap">
+            <i class="fa-solid fa-envelope"></i>
+            <input type="email" id="login-email" class="login-input" placeholder="Enter your registered email" required autocomplete="username">
+          </div>
+        </div>
+
+        <div class="login-field-group">
+          <label for="login-password">Password</label>
+          <div class="login-input-wrap">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="login-password" class="login-input" placeholder="••••••••••••" required autocomplete="current-password">
+          </div>
+        </div>
+
+        <div class="login-options-row">
+          <label class="remember-label">
+            <input type="checkbox" id="login-remember" checked>
+            <span>Remember session</span>
+          </label>
+          <span class="auth-security-pill">
+            <i class="fa-solid fa-shield-halved"></i> Catalyst Auth
+          </span>
+        </div>
+
+        <button type="submit" id="btn-login-submit" class="btn-login-submit">
+          <i class="fa-solid fa-arrow-right-to-bracket"></i>
+          <span>Sign In to Portal</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
   <!-- LEFT SIDEBAR NAVIGATION (Columns A & B in Excel)                        -->
   <!-- ====================================================================== -->
   <aside class="sidebar" id="sidebar">
@@ -302,7 +352,7 @@
       <section id="equipment-view" class="view-section" style="display:none;">
         <!-- Excel Shape Buttons (+ Add AED, Spare, Archived) -->
         <div class="excel-pill-btn-group">
-          <button class="excel-pill-btn" onclick="openAEDPanel()"><i class="fa-solid fa-plus"></i> Add AED</button>
+          <button class="excel-pill-btn" id="btn-add-aed-pill" onclick="openAEDPanel()"><i class="fa-solid fa-plus"></i> Add AED</button>
           <button class="excel-pill-btn" onclick="switchView('spare')"><i class="fa-solid fa-boxes-stacked"></i> Spare</button>
           <button class="excel-pill-btn" id="btn-toggle-archived-eq"
             onclick="toggleArchivedEquipment()"><i class="fa-solid fa-box-archive"></i> Archived</button>

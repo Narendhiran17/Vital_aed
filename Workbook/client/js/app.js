@@ -124,16 +124,10 @@ function setupNavigation() {
 }
 
 function switchView(viewName) {
-  // Update sidebar active link
-  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-  const activeLink = document.querySelector(`.sidebar-link[data-view="${viewName}"]`);
-  if (activeLink) activeLink.classList.add('active');
-
-  // Hide all sections
-  document.querySelectorAll('.view-section').forEach(s => s.style.display = 'none');
-
   // If customer role, only customer notice is shown
   if (currentRole === 'Customer (No Portal Access)') {
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    document.querySelectorAll('.view-section').forEach(s => s.style.display = 'none');
     const custView = document.getElementById('customer-no-portal-view');
     if (custView) custView.style.display = 'block';
     const titleEl = document.getElementById('page-title-banner');
@@ -143,6 +137,40 @@ function switchView(viewName) {
     }
     return;
   }
+
+  // Strict Role Route Guards per Excel RBAC Matrix
+  if (currentRole === 'Inspector') {
+    const allowedInspectorViews = ['dashboard', 'equipment', 'inspections', 'aed-panel', 'settings'];
+    if (!allowedInspectorViews.includes(viewName)) {
+      viewName = 'inspections';
+    }
+  } else if (currentRole === 'Staff') {
+    const blockedStaffViews = ['users', 'system-log'];
+    if (blockedStaffViews.includes(viewName)) {
+      viewName = 'dashboard';
+    }
+  } else if (currentRole === 'Reseller*') {
+    if (viewName === 'system-log') {
+      viewName = 'dashboard';
+    }
+    // If reseller opens users/org view, ensure it points to the Organization tab
+    if (viewName === 'users') {
+      setTimeout(() => switchUserModuleTab('organization'), 0);
+    }
+  } else if (currentRole !== 'Sys Admin') {
+    // Admin, Admin (Account owner)
+    if (viewName === 'system-log') {
+      viewName = 'dashboard';
+    }
+  }
+
+  // Update sidebar active link
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  const activeLink = document.querySelector(`.sidebar-link[data-view="${viewName}"]`);
+  if (activeLink) activeLink.classList.add('active');
+
+  // Hide all sections
+  document.querySelectorAll('.view-section').forEach(s => s.style.display = 'none');
 
   // Show target section
   const targetSection = document.getElementById(`${viewName}-view`);
@@ -6923,11 +6951,40 @@ window.renderUsersRoster = async function() {
     if (statusLabel.includes('Invite') || statusLabel.includes('Pending')) statusClass = 'invited';
     else if (statusLabel.includes('Reminders')) statusClass = 'reminders-only';
 
-    // Sys admin can edit all users; others can ONLY edit their own details alone
-    const canEditThisUser = (currentRole === 'Sys Admin') || isCurrentUser;
-    const canDeleteThisUser = (currentRole === 'Sys Admin') && !isCurrentUser;
+    // Strict RBAC per Matrix:
+    // Sys Admin: Add/Delete all users
+    // Admin (Account owner): Add/Delete users in org (except Sys Admin or self)
+    // Admin: "Yes, except account owner" -> Can edit/delete users in org except Account Owner, Sys Admin, or self
+    // Others (Staff, Inspector, Reseller): Cannot edit/delete other users
+    let canEditThisUser = false;
+    let canDeleteThisUser = false;
 
-    // Role Action Buttons (No one can see/impersonate other views)
+    if (currentRole === 'Sys Admin') {
+      canEditThisUser = true;
+      canDeleteThisUser = !isCurrentUser;
+    } else if (currentRole === 'Admin (Account owner)') {
+      if (u.role !== 'Sys Admin') {
+        canEditThisUser = true;
+        canDeleteThisUser = !isCurrentUser;
+      } else {
+        canEditThisUser = isCurrentUser;
+        canDeleteThisUser = false;
+      }
+    } else if (currentRole === 'Admin') {
+      // Per matrix: "Yes, except account owner"
+      if (u.role !== 'Sys Admin' && !isOwner) {
+        canEditThisUser = true;
+        canDeleteThisUser = !isCurrentUser;
+      } else {
+        canEditThisUser = isCurrentUser && !isOwner;
+        canDeleteThisUser = false;
+      }
+    } else {
+      canEditThisUser = isCurrentUser;
+      canDeleteThisUser = false;
+    }
+
+    // Role Action Buttons
     let actionsHtml = `
       <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
     `;
@@ -6940,7 +6997,7 @@ window.renderUsersRoster = async function() {
       `;
     }
 
-    if (currentRole === 'Sys Admin') {
+    if (currentRole === 'Sys Admin' || currentRole === 'Admin (Account owner)' || currentRole === 'Admin') {
       actionsHtml += `
         <button type="button" class="excel-pill-btn sm" style="background:#0284C7;" onclick="resendInvite('${u.id}')" title="Resend Portal Invitation Email">
           <i class="fa-solid fa-envelope"></i>
@@ -6953,6 +7010,12 @@ window.renderUsersRoster = async function() {
         <button type="button" class="excel-pill-btn sm" style="background:#DC2626;" onclick="deleteUserRecord('${u.id}', '${fullName}')" title="Delete User">
           <i class="fa-solid fa-trash-can"></i>
         </button>
+      `;
+    } else if (currentRole === 'Admin' && isOwner) {
+      actionsHtml += `
+        <span class="excel-pill-btn sm" style="background:#F1F5F9; color:#94A3B8; cursor:not-allowed;" title="Account Owner cannot be deleted by Admin (Matrix: 'Yes, except account owner')">
+          <i class="fa-solid fa-lock" style="font-size:10px;"></i>
+        </span>
       `;
     }
 
@@ -7007,10 +7070,43 @@ window.switchUserDirectly = async function(userId) {
 // Delete User Record
 // --------------------------------------------------------------------------
 window.deleteUserRecord = async function(userId, userName) {
-  if (currentRole !== 'Sys Admin') {
-    alert('Access Restricted: Only System Administrators can delete user accounts.');
+  const users = await api.getUsers();
+  const targetUser = users.find(u => String(u.id) === String(userId));
+
+  if (currentRole === 'Sys Admin') {
+    // Permitted for all users except own self
+    if (targetUser && (targetUser.email === authenticatedUser?.email || targetUser.id === authenticatedUser?.id)) {
+      alert('You cannot delete your own active administrator account.');
+      return;
+    }
+  } else if (currentRole === 'Admin (Account owner)') {
+    if (targetUser && targetUser.role === 'Sys Admin') {
+      alert('Access Restricted: You cannot delete a System Administrator account.');
+      return;
+    }
+    if (targetUser && (targetUser.email === authenticatedUser?.email || targetUser.id === authenticatedUser?.id)) {
+      alert('You cannot delete your own active account.');
+      return;
+    }
+  } else if (currentRole === 'Admin') {
+    // Matrix: "Yes, except account owner"
+    if (targetUser && (targetUser.isOwner || targetUser.role === 'Admin (Account owner)')) {
+      alert('Access Restricted:\nAdmins cannot delete the Account Owner account (Matrix Rule: "Yes, except account owner").');
+      return;
+    }
+    if (targetUser && targetUser.role === 'Sys Admin') {
+      alert('Access Restricted: You cannot delete a System Administrator account.');
+      return;
+    }
+    if (targetUser && (targetUser.email === authenticatedUser?.email || targetUser.id === authenticatedUser?.id)) {
+      alert('You cannot delete your own active account.');
+      return;
+    }
+  } else {
+    alert(`Access Restricted:\nYour active role (${currentRole}) does not have permission to delete user accounts.`);
     return;
   }
+
   if (!confirm(`Are you sure you want to remove the user account for:\n\n${userName}?\n\nThis will revoke their access to the Vital AED portal.`)) {
     return;
   }
@@ -7292,11 +7388,28 @@ window.openEditUserModal = async function(id) {
 
   const currentTopUser = getCurrentUserName().toLowerCase();
   const fullName = `${u.firstName || ''} ${u.lastName || ''}`.trim().toLowerCase();
-  const isCurrentUser = (fullName === currentTopUser) || (u.isOwner && currentRole === 'Admin (Account owner)');
+  const isCurrentUser = (fullName === currentTopUser) || (u.isOwner && currentRole === 'Admin (Account owner)') || (u.email === authenticatedUser?.email);
+  const isTargetOwner = u.isOwner || (u.role === 'Admin (Account owner)');
 
-  // Sys Admin can edit all users; others can ONLY edit their own details alone
-  if (currentRole !== 'Sys Admin' && !isCurrentUser) {
-    alert('Access Restricted:\nYou can only edit your own user details.');
+  if (currentRole === 'Sys Admin') {
+    // Permitted for all users
+  } else if (currentRole === 'Admin (Account owner)') {
+    if (u.role === 'Sys Admin' && !isCurrentUser) {
+      alert('Access Restricted: You cannot modify a System Administrator account.');
+      return;
+    }
+  } else if (currentRole === 'Admin') {
+    // Matrix: "Yes, except account owner"
+    if (isTargetOwner && !isCurrentUser) {
+      alert('Access Restricted:\nAdmins cannot edit the Account Owner account (Matrix Rule: "Yes, except account owner").');
+      return;
+    }
+    if (u.role === 'Sys Admin' && !isCurrentUser) {
+      alert('Access Restricted: You cannot modify a System Administrator account.');
+      return;
+    }
+  } else if (!isCurrentUser) {
+    alert(`Access Restricted:\nYour active role (${currentRole}) can only edit your own user details.`);
     return;
   }
 
@@ -8415,9 +8528,12 @@ function applyRolePermissions() {
   const addLocBtn = document.getElementById('btn-add-location');
   if (addLocBtn) addLocBtn.style.display = perms.canAddLocations ? 'inline-flex' : 'none';
 
-  // 2. Add Equipment Button (Sys Admin, Reseller, Admin Owner, Admin, Staff: YES; Customer: NO)
+  // 2. Add Equipment Button (Sys Admin, Reseller, Admin Owner, Admin, Staff, Inspector: YES; Customer: NO)
   const addEqBtn = document.getElementById('btn-add-equipment');
-  if (addEqBtn) addEqBtn.style.display = (perms.canManageAED && currentRole !== 'Inspector') ? 'inline-flex' : 'none';
+  if (addEqBtn) addEqBtn.style.display = perms.canManageAED ? 'inline-flex' : 'none';
+
+  const addAedPill = document.getElementById('btn-add-aed-pill');
+  if (addAedPill) addAedPill.style.display = perms.canManageAED ? 'inline-flex' : 'none';
 
   // 3. Add CPR Certification Button (Sys Admin, Reseller, Admin Owner, Admin, Staff: YES; Inspector, Customer: NO)
   const addCprBtn = document.getElementById('btn-add-cpr');
@@ -8433,6 +8549,9 @@ function applyRolePermissions() {
   const isInspector = (currentRole === 'Inspector');
   const isCustomer = (currentRole === 'Customer (No Portal Access)');
   const isStaff = (currentRole === 'Staff');
+  const isReseller = (currentRole === 'Reseller*');
+  const isSysAdmin = (currentRole === 'Sys Admin');
+  const isAdminOrOwner = (currentRole === 'Admin' || currentRole === 'Admin (Account owner)');
 
   // Inspector View: Focused strictly on Dashboard, Equipment, and Inspections
   const spareLink = document.querySelector('.sidebar-link[data-view="spare"]');
@@ -8447,24 +8566,55 @@ function applyRolePermissions() {
   const rescueLink = document.querySelector('.sidebar-link[data-view="rescue"]');
   if (rescueLink) rescueLink.parentElement.style.display = (isInspector || isCustomer) ? 'none' : 'block';
 
-  // Users & System Log hidden for Staff, Inspector, Customer, and Reseller
-  const isReseller = (currentRole === 'Reseller*');
+  // Users & Organizations Sidebar item
   const usersLink = document.querySelector('.sidebar-link[data-view="users"]');
   if (usersLink) {
-    usersLink.parentElement.style.display = (isInspector || isCustomer || isStaff || isReseller || currentRole === 'Subscriber') ? 'none' : 'block';
+    if (isInspector || isCustomer || isStaff) {
+      usersLink.parentElement.style.display = 'none';
+    } else if (isReseller) {
+      usersLink.parentElement.style.display = 'block';
+      const textSpan = usersLink.querySelector('.sidebar-link-text');
+      if (textSpan) textSpan.textContent = 'Organizations';
+      usersLink.setAttribute('data-tooltip', 'Organizations');
+    } else {
+      // Sys Admin, Admin (Account owner), Admin
+      usersLink.parentElement.style.display = 'block';
+      const textSpan = usersLink.querySelector('.sidebar-link-text');
+      if (textSpan) textSpan.textContent = 'Users';
+      usersLink.setAttribute('data-tooltip', 'Users');
+    }
   }
 
+  // System Log: Strictly Sys Admin only
   const sysLogLink = document.querySelector('.sidebar-link[data-view="system-log"]');
   if (sysLogLink) {
-    sysLogLink.parentElement.style.display = (isInspector || isCustomer || isStaff || isReseller || currentRole === 'Subscriber') ? 'none' : 'block';
+    sysLogLink.parentElement.style.display = isSysAdmin ? 'block' : 'none';
   }
 
   // Account divider & title
   const accountGroup = document.querySelector('.sidebar-group-title');
-  if (accountGroup) accountGroup.style.display = (isInspector || isCustomer || isStaff || isReseller || currentRole === 'Subscriber') ? 'none' : 'block';
+  if (accountGroup) {
+    accountGroup.style.display = (isInspector || isCustomer || isStaff) ? 'none' : 'block';
+    if (isReseller) accountGroup.textContent = 'Management';
+    else accountGroup.textContent = 'Account';
+  }
 
   const accountDivider = document.querySelector('.sidebar-divider');
-  if (accountDivider) accountDivider.style.display = (isInspector || isCustomer || isStaff || isReseller || currentRole === 'Subscriber') ? 'none' : 'block';
+  if (accountDivider) {
+    accountDivider.style.display = (isInspector || isCustomer || isStaff) ? 'none' : 'block';
+  }
+
+  // User tabs inside Users & Access section:
+  const btnUserRoster = document.getElementById('btn-user-toggle-roster');
+  const btnUserOrg = document.getElementById('btn-user-toggle-org');
+  if (isReseller) {
+    // Reseller footnote: 1 portal access, manage organizations only
+    if (btnUserRoster) btnUserRoster.style.display = 'none';
+    if (btnUserOrg) btnUserOrg.style.display = 'inline-flex';
+  } else {
+    if (btnUserRoster) btnUserRoster.style.display = 'inline-flex';
+    if (btnUserOrg) btnUserOrg.style.display = 'inline-flex';
+  }
 
   // 6. Update Report Toolbars per Role Permissions
   ['equipment', 'spare', 'inspections', 'rescue', 'cpr', 'locations', 'users', 'organizations'].forEach(r => {
