@@ -1,11 +1,15 @@
 {
-  "stack": "node18",
-  "name": "aed_backend",
-  "type": "advancedio",
-  "main": "index.js",
-  "env_variables": {
-    "CREATOR_OWNER_NAME": "christine_vitalaed",
-    "CREATOR_APP_LINK_NAME": "aed-remind-db",
-    "CREATOR_BASE_URL": "https://creator.zoho.com/api/v2"
+  "deployment": {
+    "name": "aed_backend",
+    "stack": "node18",
+    "type": "advancedio",
+    "env_variables": {
+      "CREATOR_OWNER_NAME": "christine_vitalaed",
+      "CREATOR_APP_LINK_NAME": "aed-remind",
+      "CREATOR_BASE_URL": "https://creator.zoho.com/api/v2"
+    }
+  },
+  "execution": {
+    "main": "index.js"
   }
 }

@@ -1,0 +1,2471 @@
+/* ==========================================================================
+   EXACT UI STYLE REPLICATION: AED Remind System Map - 2.8.xlsx
+   Corporate Navy / Royal Blue Medical Compliance Portal
+   ========================================================================== */
+
+:root {
+  /* Exact Colors extracted from Excel cells */
+  --excel-navy-sidebar: #004182;       /* Sidebar background (Col A) */
+  --excel-navy-sidebar-hover: #003163;
+  --excel-navy-sidebar-active: #002244;
+  --excel-royal-blue-banner: #0070C0;  /* Row 2 Title Bar fill */
+  --excel-table-header-navy: #004182;  /* Main Table Header fill */
+  --excel-table-header-navy2: #00428A; /* Alternate Main Table Header */
+  --excel-subtable-header: #C8DEF0;    /* Sub-table Header fill (Pads/Bat/Insp) */
+  --excel-subtable-text: #004182;      /* Sub-table Header text */
+  --excel-icon-blue: #0054B0;          /* Action icons (View, Search, Buy, Download) */
+  
+  /* Compliance Status Colors */
+  --status-ok-green: #00B050;          /* Checkmark  Ok / Rescue-Ready */
+  --status-failed-red: #FF0000;        /* Times  Failed / Expired / Out of Service */
+  --status-warning-amber: #D97706;     /* Triangle  Overdue / Expires in [x days] / Warranty */
+  --status-upcoming-blue: #008FFA;     /* Clock/Calendar  Upcoming */
+  
+  /* Base Layout */
+  --bg-page: #F4F6F9;
+  --bg-canvas: #FFFFFF;
+  --border-light: #D9E2EC;
+  --border-table: #BCCCDC;
+  --text-dark: #1E293B;
+  --text-muted: #64748B;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Calibri', 'Segoe UI', 'Inter', -apple-system, sans-serif;
+}
+
+body {
+  background-color: var(--bg-page);
+  color: var(--text-dark);
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ==========================================================================
+   LEFT SIDEBAR (Column A/B in Excel)
+   ========================================================================== */
+.sidebar {
+  width: 230px;
+  background-color: var(--excel-navy-sidebar);
+  color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 50;
+  border-right: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-x: hidden;
+}
+
+.sidebar-header {
+  padding: 0 16px;
+  background-color: #003366;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  box-sizing: border-box;
+  gap: 10px;
+  flex-shrink: 0;
+  transition: padding 0.2s ease;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sidebar-brand i {
+  font-size: 19px;
+  color: #38BDF8;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.4));
+}
+
+.sidebar-brand h2 {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.sidebar-toggle-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #93C5FD;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.sidebar-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.05);
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 12px 10px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-item {
+  width: 100%;
+}
+
+/* Modern Floating Pill Nav Items */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  padding: 9px 12px;
+  margin: 3px 0;
+  border-radius: 8px;
+  color: #E2E8F0;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  position: relative;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+}
+
+.sidebar-link-text {
+  transition: opacity 0.15s ease;
+}
+
+.sidebar-link:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+  transform: translateX(2px);
+}
+
+.sidebar-link.active {
+  background: linear-gradient(135deg, #0284C7 0%, #0070C0 100%);
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 3px 10px rgba(0, 112, 192, 0.35);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Indented sub-items like 'Spare' under Equipment */
+.sidebar-link.sub-item {
+  margin: 2px 0 2px 18px;
+  padding: 7px 12px;
+  font-size: 13px;
+  color: #CBD5E1;
+  background-color: rgba(0, 0, 0, 0.12);
+  border-left: 2px solid rgba(56, 189, 248, 0.35);
+  border-radius: 0 6px 6px 0;
+}
+
+.sidebar-link.sub-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-left-color: #38BDF8;
+  color: #FFFFFF;
+}
+
+.sidebar-link.sub-item.active {
+  background: linear-gradient(135deg, #0284C7 0%, #0070C0 100%);
+  border-left-color: #38BDF8;
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 112, 192, 0.3);
+}
+
+.sidebar-link i {
+  width: 20px;
+  font-size: 14px;
+  margin-right: 12px;
+  text-align: center;
+  color: #7DD3FC;
+  transition: color 0.18s ease, transform 0.18s ease;
+  flex-shrink: 0;
+}
+
+.sidebar-link:hover i,
+.sidebar-link.active i {
+  color: #FFFFFF;
+}
+
+.sidebar-link.sub-item i {
+  width: 18px;
+  font-size: 12.5px;
+  margin-right: 10px;
+  color: #93C5FD;
+}
+
+/* Sidebar Section Dividers */
+.sidebar-divider {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.12);
+  margin: 12px 6px;
+}
+
+.sidebar-group-title {
+  padding: 6px 14px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #7DD3FC;
+  font-weight: 700;
+  opacity: 0.85;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+/* Sidebar User Profile Card Footer */
+.sidebar-user-footer {
+  margin-top: auto;
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.22);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.sidebar-user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7DD3FC;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.sidebar-user-details {
+  min-width: 0;
+  overflow: hidden;
+  flex: 1;
+}
+
+.sidebar-user-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #FFFFFF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.sidebar-user-role {
+  font-size: 11px;
+  color: #94A3B8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  margin-top: 1px;
+}
+
+/* ==========================================================================
+   COLLAPSED SIDEBAR RAIL & TOOLTIP FLYOUTS (Screenshot 1 Functionality)
+   ========================================================================== */
+body.sidebar-collapsed .sidebar,
+.sidebar.collapsed {
+  width: 64px !important;
+  overflow: visible !important;
+}
+
+body.sidebar-collapsed .main-wrapper,
+.sidebar.collapsed ~ .main-wrapper {
+  margin-left: 64px !important;
+}
+
+.sidebar.collapsed .sidebar-menu {
+  overflow: visible !important;
+  padding: 10px 6px !important;
+}
+
+.sidebar.collapsed .sidebar-header {
+  padding: 10px 0 !important;
+  justify-content: center !important;
+}
+
+.sidebar.collapsed .sidebar-brand {
+  display: none !important;
+}
+
+.sidebar.collapsed .sidebar-toggle-btn {
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+}
+
+.sidebar.collapsed .sidebar-link-text {
+  display: none !important;
+}
+
+.sidebar.collapsed .sidebar-group-title {
+  display: none !important;
+}
+
+.sidebar.collapsed .sidebar-user-details {
+  display: none !important;
+}
+
+.sidebar.collapsed .sidebar-user-footer {
+  padding: 12px 0 !important;
+  justify-content: center !important;
+}
+
+.sidebar.collapsed .sidebar-divider {
+  margin: 8px 6px !important;
+}
+
+.sidebar.collapsed .sidebar-link {
+  padding: 10px 0 !important;
+  margin: 4px 0 !important;
+  justify-content: center !important;
+  border-radius: 8px !important;
+  border: 1px solid transparent !important;
+}
+
+.sidebar.collapsed .sidebar-link.sub-item {
+  margin: 4px 0 !important;
+  padding: 10px 0 !important;
+  background-color: transparent !important;
+  border-left: none !important;
+}
+
+.sidebar.collapsed .sidebar-link i {
+  margin-right: 0 !important;
+  font-size: 16px !important;
+  width: auto !important;
+}
+
+.sidebar.collapsed .sidebar-link.sub-item i {
+  font-size: 14px !important;
+  margin-right: 0 !important;
+}
+
+/* Floating Tooltip (Corporate Royal Blue pill matching application theme) */
+.sidebar.collapsed .sidebar-link::after,
+.sidebar.collapsed .sidebar-user-footer::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%) scale(0.92);
+  transform-origin: left center;
+  background: #0070C0;
+  color: #FFFFFF;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0, 32, 96, 0.35);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.sidebar.collapsed .sidebar-link::before,
+.sidebar.collapsed .sidebar-user-footer::before {
+  content: '';
+  position: absolute;
+  left: calc(100% + 4px);
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 5px 6px 5px 0;
+  border-style: solid;
+  border-color: transparent #0070C0 transparent transparent;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease, visibility 0.18s;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.sidebar.collapsed .sidebar-link:hover::after,
+.sidebar.collapsed .sidebar-user-footer:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) scale(1);
+}
+
+.sidebar.collapsed .sidebar-link:hover::before,
+.sidebar.collapsed .sidebar-user-footer:hover::before {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ==========================================================================
+   MAIN CONTENT AREA (Column C+ in Excel)
+   ========================================================================== */
+.main-wrapper {
+  margin-left: 230px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Top utility bar */
+.topbar {
+  background-color: #FFFFFF;
+  height: 48px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.topbar-left {
+  font-size: 13px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar-sidebar-toggle {
+  background: transparent;
+  border: 1px solid #CBD5E1;
+  color: #475569;
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s ease;
+}
+
+.topbar-sidebar-toggle:hover {
+  background: #F1F5F9;
+  color: #004182;
+  border-color: #94A3B8;
+}
+
+.topbar-org-container {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-left: 12px;
+}
+
+.topbar-org-select {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: #1E293B;
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  height: 30px;
+  max-width: 280px;
+  transition: all 0.15s ease;
+}
+
+.topbar-org-select:focus {
+  border-color: #0070C0;
+  box-shadow: 0 0 0 2px rgba(0, 112, 192, 0.15);
+}
+
+.btn-topbar-add-org {
+  margin-left: 8px;
+  background: #0070C0;
+  color: #FFFFFF;
+  border: 1px solid #0054B0;
+  padding: 0 12px;
+  height: 28px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  vertical-align: middle;
+  box-shadow: 0 1px 2px rgba(0, 65, 130, 0.15);
+}
+
+.btn-topbar-add-org:hover {
+  background: #0054B0;
+  border-color: #004182;
+  box-shadow: 0 2px 5px rgba(0, 65, 130, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-topbar-add-org:active {
+  transform: translateY(0);
+}
+
+.btn-topbar-add-org i {
+  font-size: 11px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.btn-topbar-logout {
+  background: #FFF1F2;
+  border: 1px solid #FECDD3;
+  color: #E11D48;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.btn-topbar-logout:hover {
+  background: #FFE4E6;
+  border-color: #FDA4AF;
+  color: #BE123C;
+}
+
+.user-profile-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 10px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 20px;
+}
+
+.excel-role-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.excel-role-badge.sys-admin { background: #EDE9FE; color: #6D28D9; border: 1px solid #DDD6FE; }
+.excel-role-badge.account-owner { background: #DBEAFE; color: #1D4ED8; border: 1px solid #BFDBFE; }
+.excel-role-badge.admin { background: #E0E7FF; color: #4338CA; border: 1px solid #C7D2FE; }
+.excel-role-badge.reseller { background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; }
+.excel-role-badge.staff { background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD; }
+.excel-role-badge.inspector { background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
+.excel-role-badge.customer { background: #F1F5F9; color: #64748B; border: 1px solid #CBD5E1; }
+
+.system-badge {
+  font-size: 11px;
+  background: #ECFDF5;
+  color: #059669;
+  border: 1px solid #A7F3D0;
+  padding: 3px 8px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+}
+
+.system-badge .dot {
+  width: 6px;
+  height: 6px;
+  background: #10B981;
+  border-radius: 50%;
+}
+
+.user-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+/* ==========================================================================
+   AUTHENTICATION & LOGIN OVERLAY
+   ========================================================================== */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: linear-gradient(135deg, #001E3D 0%, #004182 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  background: #FFFFFF;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  padding: 28px;
+  border: 1px solid #E2E8F0;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.login-brand i {
+  font-size: 26px;
+  color: #0070C0;
+}
+
+.login-brand h1 {
+  font-size: 22px;
+  font-weight: 800;
+  color: #004182;
+  letter-spacing: -0.02em;
+}
+
+.login-subtext {
+  font-size: 13px;
+  color: #64748B;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.login-error-msg {
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  color: #DC2626;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.login-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.login-field-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.login-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.login-input-wrap i {
+  position: absolute;
+  left: 12px;
+  color: #94A3B8;
+  font-size: 13px;
+}
+
+.login-input-wrap input {
+  width: 100%;
+  padding: 9px 12px 9px 36px;
+  border: 1px solid #CBD5E1;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #1E293B;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.login-input-wrap input:focus {
+  border-color: #0070C0;
+  box-shadow: 0 0 0 2px rgba(0, 112, 192, 0.15);
+}
+
+.login-options-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.remember-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #475569;
+  cursor: pointer;
+}
+
+.auth-security-pill {
+  font-size: 11px;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.btn-login-submit {
+  background: #0070C0;
+  color: #FFFFFF;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+  box-shadow: 0 2px 4px rgba(0, 112, 192, 0.25);
+  transition: background 0.15s;
+}
+
+.btn-login-submit:hover {
+  background: #0054B0;
+}
+
+.login-demo-helper {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #F1F5F9;
+}
+
+.demo-helper-title {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.demo-helper-title span {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94A3B8;
+  letter-spacing: 0.05em;
+}
+
+.demo-roles-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 7px;
+}
+
+.demo-role-btn {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  padding: 6px 8px;
+  border-radius: 4px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.demo-role-btn:hover {
+  background: #EFF6FF;
+  border-color: #93C5FD;
+}
+
+.demo-role-btn strong {
+  display: block;
+  font-size: 11px;
+  color: #004182;
+}
+
+.demo-role-btn small {
+  display: block;
+  font-size: 9.5px;
+  color: #64748B;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Page Banner (Row 2 in Excel: Royal Blue #0070C0) */
+.page-title-banner {
+  background-color: var(--excel-royal-blue-banner);
+  color: #FFFFFF;
+  padding: 10px 24px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.page-container {
+  padding: 20px 24px;
+  flex: 1;
+}
+
+/* Search Bar Row (Row 5 in Excel:  [Add search function]) */
+.search-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 16px;
+}
+
+.search-box-excel {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border: 1px solid var(--border-table);
+  border-radius: 4px;
+  padding: 6px 12px;
+  width: 380px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.search-box-excel i {
+  color: var(--excel-icon-blue);
+  font-size: 14px;
+  margin-right: 10px;
+}
+
+.search-box-excel input {
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: var(--text-dark);
+  width: 100%;
+}
+
+.search-box-excel input::placeholder {
+  color: #94A3B8;
+  font-style: italic;
+}
+
+/* Action Buttons */
+.btn-action {
+  background-color: var(--excel-table-header-navy);
+  color: #FFFFFF;
+  border: none;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s;
+}
+
+.btn-action:hover {
+  background-color: #002D5A;
+}
+
+.btn-action.secondary {
+  background-color: #FFFFFF;
+  color: var(--excel-table-header-navy);
+  border: 1px solid var(--excel-table-header-navy);
+}
+
+.btn-action.secondary:hover {
+  background-color: #F1F5F9;
+}
+
+/* ==========================================================================
+   EXACT EXCEL SHAPE BUTTONS (+ Add AED, Spare, Archived)
+   ========================================================================== */
+.excel-pill-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 16px 0 16px 0;
+}
+
+.excel-pill-btn {
+  background: #003B73;
+  color: #FFFFFF;
+  border: 1px solid #002B55;
+  border-radius: 6px;
+  padding: 7px 24px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: all 0.15s ease;
+  user-select: none;
+  text-decoration: none;
+}
+
+.excel-pill-btn:hover {
+  background: #002D5A;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 9px rgba(0, 0, 0, 0.42), 0 2px 4px rgba(0, 0, 0, 0.22);
+}
+
+.excel-pill-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.excel-pill-btn.active {
+  background: #002244;
+  border-color: #0070C0;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.2);
+  color: #E0F2FE;
+}
+
+/* Excel Search Function Row (☐ [Add search function]) */
+.excel-equipment-search-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.excel-search-box-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.excel-checkbox-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: #004182;
+  font-size: 15px;
+}
+
+.excel-search-input-field {
+  position: relative;
+}
+
+.excel-search-input-field input {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 2px;
+  padding: 5px 12px;
+  font-size: 13px;
+  color: #1E293B;
+  width: 280px;
+  font-family: inherit;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.excel-search-input-field input::placeholder {
+  color: #475569;
+}
+
+.excel-search-input-field input:focus {
+  outline: none;
+  border-color: #0070C0;
+  box-shadow: 0 0 0 2px rgba(0, 112, 192, 0.2);
+}
+
+/* Section Header Bar within a Page (e.g. Inspections overview, Expiring Equipment) */
+.section-subtitle-bar {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--excel-table-header-navy);
+  margin: 22px 0 8px 0;
+  padding-bottom: 4px;
+  border-bottom: 2px solid var(--excel-table-header-navy);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ==========================================================================
+   EXACT EXCEL TABLES SPECIFICATION
+   ========================================================================== */
+.excel-table-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border-table);
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.excel-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  text-align: left;
+}
+
+/* Main Table Header (Solid Navy Blue #004182 with Bold White Text) */
+.excel-table th {
+  background-color: var(--excel-table-header-navy);
+  color: #FFFFFF;
+  font-weight: 700;
+  padding: 8px 12px;
+  border: 1px solid #002D5A;
+  white-space: nowrap;
+}
+
+/* Sub-table Header (Light Blue #C8DEF0 with Navy Text #004182) */
+.excel-table.subtable th {
+  background-color: var(--excel-subtable-header);
+  color: var(--excel-subtable-text);
+  font-weight: 700;
+  border: 1px solid #A9CBE8;
+}
+
+/* Table Cells */
+.excel-table td {
+  padding: 7px 12px;
+  border: 1px solid #E2E8F0;
+  color: #1E293B;
+  vertical-align: middle;
+}
+
+.excel-table tbody tr:nth-child(even) {
+  background-color: #F8FAFC;
+}
+
+.excel-table tbody tr:hover {
+  background-color: #EFF6FF;
+}
+
+/* Action Icons inside Tables (View, Buy, Resources, Download) */
+.excel-icon-btn {
+  background: none;
+  border: none;
+  color: var(--excel-icon-blue);
+  font-size: 15px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s;
+}
+
+.excel-icon-btn:hover {
+  transform: scale(1.15);
+}
+
+.excel-icon-btn.buy {
+  color: var(--excel-icon-blue);
+}
+
+.excel-icon-btn.download {
+  color: var(--excel-icon-blue);
+}
+
+.excel-icon-btn.resource {
+  color: #334155;
+}
+
+/* Status Icons (Strictly matching Excel Colors) */
+.status-icon-col {
+  text-align: center;
+  width: 30px;
+}
+
+.status-icon-ok {
+  color: var(--status-ok-green);
+  font-size: 15px;
+}
+
+.status-icon-failed {
+  color: var(--status-failed-red);
+  font-size: 15px;
+}
+
+.status-icon-warning {
+  color: var(--status-warning-amber);
+  font-size: 15px;
+}
+
+.status-icon-upcoming {
+  color: var(--status-upcoming-blue);
+  font-size: 15px;
+}
+
+.status-text-ok {
+  color: var(--status-ok-green);
+  font-weight: 600;
+}
+
+.status-text-failed {
+  color: var(--status-failed-red);
+  font-weight: 600;
+}
+
+.status-text-warning {
+  color: var(--status-warning-amber);
+  font-weight: 600;
+}
+
+.status-text-upcoming {
+  color: var(--status-upcoming-blue);
+  font-weight: 600;
+}
+
+/* Excel Location Group Divider Row */
+.excel-table tr.excel-group-divider td {
+  background-color: #D3DDE8 !important;
+  height: 14px !important;
+  padding: 0 !important;
+  border-top: 1px solid #B0BEC5 !important;
+  border-bottom: 1px solid #B0BEC5 !important;
+}
+
+/* Excel 1:1 Status Cell (Icons & Labels matching 'Warning Colors' Sheet) */
+.excel-status-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.excel-status-icon {
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.excel-status-label {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.excel-status-label.ok {
+  color: #107C41;
+}
+
+.excel-status-label.warning {
+  color: #ED7D31;
+}
+
+.excel-status-label.danger,
+.excel-status-label.danger-triangle {
+  color: #C00000;
+}
+
+.excel-status-label.upcoming {
+  color: #0070C0;
+}
+
+/* Excel Action Squares (View, Resource, Buy) */
+.excel-action-square {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid #0070C0;
+  border-radius: 1px;
+  cursor: pointer;
+  background: transparent;
+  transition: all 0.15s ease;
+  color: #0070C0;
+  font-size: 9px;
+  text-decoration: none;
+}
+
+.excel-action-square:hover {
+  background: #E0F2FE;
+  transform: scale(1.15);
+}
+
+.excel-view-square {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid #004182;
+  border-radius: 1px;
+  cursor: pointer;
+  background: transparent;
+  transition: all 0.15s ease;
+  color: #004182;
+  font-size: 9px;
+}
+
+.excel-view-square:hover {
+  background: #C8DEF0;
+  transform: scale(1.15);
+}
+
+/* ==========================================================================
+   DEVELOPER NOTES CALLOUT BOX (Exact Excel Sheet Component)
+   ========================================================================== */
+.developer-notes-box {
+  background-color: #FEF9C3;
+  border: 1px solid #FDE047;
+  border-left: 5px solid #CA8A04;
+  padding: 12px 16px;
+  margin-top: 18px;
+  border-radius: 3px;
+  font-size: 12.5px;
+  color: #713F12;
+}
+
+.developer-notes-box h4 {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #854D0E;
+}
+
+.developer-notes-box ul {
+  padding-left: 20px;
+  line-height: 1.6;
+}
+
+/* ==========================================================================
+   MODALS (AED Panel, Inspection Form, Location Form, CPR Form)
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 34, 68, 0.6);
+  backdrop-filter: blur(2px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-excel-card {
+  background: #FFFFFF;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 720px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  border: 2px solid var(--excel-table-header-navy);
+}
+
+.modal-excel-header {
+  background-color: var(--excel-table-header-navy);
+  color: #FFFFFF;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-excel-header h3 {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  color: #FFFFFF;
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modal-excel-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-excel-footer {
+  padding: 12px 20px;
+  background: #F1F5F9;
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Form Grid */
+.excel-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.excel-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.excel-form-group.col-span-2 {
+  grid-column: span 2;
+}
+
+.excel-form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+.excel-form-group label span.req {
+  color: #EF4444;
+}
+
+.excel-form-control {
+  padding: 7px 10px;
+  border: 1px solid var(--border-table);
+  border-radius: 3px;
+  font-size: 12.5px;
+  color: var(--text-dark);
+  outline: none;
+  background: #FFFFFF;
+}
+
+.excel-form-control:focus {
+  border-color: var(--excel-icon-blue);
+  box-shadow: 0 0 0 2px rgba(0, 84, 176, 0.15);
+}
+
+.excel-form-control[readonly] {
+  background-color: #F1F5F9;
+  color: #64748B;
+  cursor: not-allowed;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #1E293B;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+/* Sub-panel in Modal (AED Pads and Batteries) */
+.modal-subpanel {
+  background: #F8FAFC;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  padding: 12px;
+  margin-top: 14px;
+}
+
+.modal-subpanel-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--excel-table-header-navy);
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ==========================================================================
+   EXACT 4 KPI CARDS (Matching User Screenshot)
+   ========================================================================== */
+.excel-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+@media (max-width: 1024px) {
+  .excel-kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.excel-kpi-card {
+  background-color: #D3E6FC;          /* Exact pastel blue fill */
+  border: 1.5px solid #2B7CD3;        /* Exact blue border */
+  border-radius: 12px;               /* Rounded corners as in image */
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.excel-kpi-icon-tag {
+  color: #004A99;
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.excel-kpi-icon-tag i {
+  font-size: 19px;
+}
+
+.excel-kpi-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #003366;
+  margin-bottom: 4px;
+}
+
+.excel-kpi-stat-line {
+  font-size: 13.5px;
+  color: #003366;
+  line-height: 1.4;
+}
+
+.excel-kpi-stat-line strong {
+  font-weight: 700;
+  color: #002B54;
+}
+
+/* ==========================================================================
+   EXACT AED PANEL & SUB-NAVIGATION TABS (Matching User Screenshots 1-5)
+   ========================================================================== */
+.aed-panel-tabs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 18px 0;
+  flex-wrap: wrap;
+}
+
+.aed-panel-tab-btn {
+  background: #003B73;
+  color: #FFFFFF;
+  border: 1px solid #002B55;
+  border-radius: 6px;
+  padding: 7px 22px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: all 0.15s ease;
+  user-select: none;
+  text-decoration: none;
+}
+
+.aed-panel-tab-btn:hover {
+  background: #002D5A;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 9px rgba(0, 0, 0, 0.42);
+}
+
+.aed-panel-tab-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.aed-panel-tab-btn.active {
+  background: #0070C0 !important;
+  border-color: #005A9E !important;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.35) !important;
+}
+
+.aed-panel-tab-btn.equipment-nav-btn {
+  background: #003B73;
+}
+
+/* AED Panel Section Banner */
+.aed-panel-banner {
+  background-color: var(--excel-table-header-navy);
+  color: #FFFFFF;
+  padding: 8px 16px;
+  font-size: 14.5px;
+  font-weight: 700;
+  border-radius: 2px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.aed-panel-banner .banner-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.excel-pill-btn.sm {
+  padding: 5px 14px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.excel-pill-btn.back {
+  background: #D9E1F2;
+  color: #002060;
+  border: 1px solid #8EA9DB;
+  font-weight: 700;
+  padding: 5px 18px;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.excel-pill-btn.back:hover {
+  background: #B4C6E7;
+  color: #002060;
+}
+
+/* 2-Column Form Grid (Screenshot 1) */
+.excel-form-2col-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border-table);
+  padding: 22px 24px;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  margin-bottom: 24px;
+}
+
+.excel-form-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 28px;
+}
+
+@media (max-width: 900px) {
+  .excel-form-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.excel-form-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.excel-form-cell label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1E293B;
+  margin-bottom: 2px;
+}
+
+.excel-field-legend {
+  font-size: 11px;
+  color: #475569;
+  font-style: italic;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.excel-form-input {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 2px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #1E293B;
+  font-family: inherit;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.excel-form-input:focus {
+  outline: none;
+  border-color: #0070C0;
+  box-shadow: 0 0 0 2px rgba(0, 112, 192, 0.2);
+}
+
+.excel-form-input[readonly] {
+  background-color: #F8FAFC;
+  color: #334155;
+  font-weight: 600;
+}
+
+.excel-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #E2E8F0;
+}
+
+/* Light Blue Sub-table Header for Pads, Batteries, Inspections, Rescue Events (Screenshots 2-5) */
+.excel-table.ice-blue-header th {
+  background-color: #C8DEF0 !important;
+  color: #004182 !important;
+  font-weight: 700 !important;
+  border: 1px solid #93C5FD !important;
+}
+
+/* System Log Badge */
+.log-status-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.log-status-badge.success {
+  background-color: #ECFDF5;
+  color: #059669;
+  border: 1px solid #A7F3D0;
+}
+
+.log-status-badge.warning {
+  background-color: #FEF3C7;
+  color: #D97706;
+  border: 1px solid #FDE68A;
+}
+
+.log-status-badge.danger {
+  background-color: #FEE2E2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+}
+
+/* ==========================================================================
+   REGISTER INSPECTION FORM (Exact 1:1 from Excel Screenshots 1-4)
+   ========================================================================== */
+.inspection-section-bar {
+  background-color: #C8DEF0;
+  color: #004182;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 8px 16px;
+  border: 1px solid #93C5FD;
+  border-radius: 2px;
+  margin-bottom: 16px;
+}
+
+.insp-assigned-box {
+  background-color: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-radius: 2px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #1E293B;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.insp-assigned-tag {
+  background: #E0F2FE;
+  color: #0369A1;
+  border: 1px solid #BAE6FD;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.insp-warning-banner {
+  background-color: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+  border-radius: 2px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.insp-override-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 900px) {
+  .insp-override-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.insp-override-box {
+  background-color: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-radius: 2px;
+  padding: 12px 14px;
+}
+
+.insp-override-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #1E293B;
+}
+
+.insp-override-label input[type="checkbox"] {
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  accent-color: #004182;
+  cursor: pointer;
+}
+
+/* Question Cards */
+.insp-questions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.insp-q-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border-table);
+  border-radius: 2px;
+  padding: 14px 16px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.insp-q-card:hover {
+  border-color: #93C5FD;
+}
+
+.insp-q-card.conditional-active {
+  border-left: 4px solid #0284C7;
+  background-color: #F0F9FF;
+}
+
+.insp-q-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1E293B;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.insp-q-title .conditional-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #0284C7;
+  background: #E0F2FE;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.insp-q-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.insp-q-options {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.insp-q-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+}
+
+.insp-q-option input[type="radio"],
+.insp-q-option input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #004182;
+  cursor: pointer;
+}
+
+.insp-status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+  min-width: 72px;
+  justify-content: center;
+}
+
+.insp-status-indicator.pass {
+  background-color: #ECFDF5;
+  color: #059669;
+  border: 1px solid #A7F3D0;
+}
+
+.insp-status-indicator.fail {
+  background-color: #FEE2E2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+}
+
+.insp-status-indicator.pending {
+  background-color: #F1F5F9;
+  color: #64748B;
+  border: 1px solid #CBD5E1;
+}
+
+.insp-q-notes-input {
+  width: 100%;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 2px;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  color: #1E293B;
+  font-family: inherit;
+}
+
+.insp-q-notes-input:focus {
+  outline: none;
+  border-color: #0070C0;
+}
+
+.insp-signature-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ==========================================================================
+   PAD CATEGORY TOGGLE (Adult Pads vs Pediatric Pads - 1:1 Screenshot Match)
+   ========================================================================== */
+.pad-category-toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 20px;
+  background-color: #E9EFF6;
+  border-bottom: 1px solid #CBD5E1;
+}
+
+.pad-category-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  outline: none;
+  font-family: inherit;
+  background-color: #D4DEE9;
+  color: #334155;
+  border: 1px solid #B0BEC5;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.pad-category-btn:hover {
+  background-color: #C6D3E2;
+}
+
+.pad-category-btn.active {
+  background-color: #0055A5; /* Exact rich royal blue from user screenshot */
+  color: #FFFFFF;
+  font-weight: 600;
+  border: 1px solid #004585;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* ==========================================================================
+   USER MANAGEMENT & RBAC ACCESS SYSTEM
+   ========================================================================== */
+
+/* Role Badges matching Screenshot 1 */
+.user-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.user-role-badge.sys-admin {
+  background: #EDE9FE;
+  color: #6D28D9;
+  border: 1px solid #DDD6FE;
+}
+
+.user-role-badge.reseller {
+  background: #FEF3C7;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+}
+
+.user-role-badge.account-owner {
+  background: #E0F2FE;
+  color: #0369A1;
+  border: 1px solid #BAE6FD;
+}
+
+.user-role-badge.admin {
+  background: #E0F7FA;
+  color: #00838F;
+  border: 1px solid #B2EBF2;
+}
+
+.user-role-badge.staff {
+  background: #DCFCE7;
+  color: #15803D;
+  border: 1px solid #BBF7D0;
+}
+
+.user-role-badge.inspector {
+  background: #FFEDD5;
+  color: #C2410C;
+  border: 1px solid #FED7AA;
+}
+
+.user-role-badge.customer {
+  background: #F1F5F9;
+  color: #475569;
+  border: 1px solid #CBD5E1;
+}
+
+/* User Status Badges */
+.user-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.user-status-pill.active {
+  background: #ECFDF5;
+  color: #059669;
+}
+
+.user-status-pill.invited {
+  background: #FFFBEB;
+  color: #D97706;
+}
+
+.user-status-pill.reminders-only {
+  background: #F1F5F9;
+  color: #64748B;
+}
+
+/* Role Scope Tag */
+.role-scope-tag {
+  display: inline-block;
+  font-size: 11px;
+  color: #475569;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+/* Customer Portal Access Lock Notice */
+.customer-portal-lock {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  padding: 40px 30px;
+  text-align: center;
+  max-width: 680px;
+  margin: 40px auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.customer-portal-lock-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #F1F5F9;
+  color: #004182;
+  font-size: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.customer-portal-lock h3 {
+  color: #004182;
+  font-size: 20px;
+  margin: 0 0 10px 0;
+}
+
+.customer-portal-lock p {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #475569;
+  margin-bottom: 20px;
+}
+
+.customer-reminders-box {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  padding: 16px;
+  text-align: left;
+  margin: 20px 0;
+}
+
+.customer-reminders-box h4 {
+  margin: 0 0 8px 0;
+  color: #1E293B;
+  font-size: 13px;
+}
+
+.customer-reminders-box ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 12.5px;
+  color: #475569;
+  line-height: 1.7;
+}
+
+/* Realistic Portal Invite Email Card */
+.email-preview-card {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  margin-top: 14px;
+}
+
+.email-meta-header {
+  background: #F1F5F9;
+  border-bottom: 1px solid #E2E8F0;
+  padding: 12px 18px;
+  font-size: 12.5px;
+  color: #334155;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.email-body-content {
+  padding: 24px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #1E293B;
+}
+
+.email-cta-box {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  padding: 20px;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.email-perm-list {
+  background: #F8FAFC;
+  border-left: 3px solid #0070C0;
+  padding: 12px 16px;
+  margin: 14px 0;
+  font-size: 12.5px;
+  color: #334155;
+  border-radius: 0 4px 4px 0;
+}
+
+.email-perm-list ul {
+  margin: 4px 0 0 0;
+  padding-left: 18px;
+}
+
+/* ==========================================================================
+   REPORT ACTION TOOLBAR & SELECTION CHECKBOXES (Screenshot 2)
+   ========================================================================== */
+.report-action-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.report-action-btn {
+  background: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1F2937;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.report-action-btn:hover:not(:disabled) {
+  background: #F9FAFB;
+  border-color: #9CA3AF;
+  color: #111827;
+}
+
+.report-action-btn:active:not(:disabled) {
+  background: #F3F4F6;
+}
+
+.report-action-btn:disabled,
+.report-action-btn.disabled {
+  opacity: 0.6;
+  cursor: pointer;
+  background: #F9FAFB;
+  border-color: #E5E7EB;
+  color: #64748B;
+}
+
+.report-action-btn.btn-delete-report:hover:not(:disabled) {
+  border-color: #EF4444;
+  color: #DC2626;
+  background: #FEF2F2;
+}
+
+.report-checkbox-th {
+  width: 48px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 8px 6px !important;
+}
+
+.report-checkbox-td {
+  width: 48px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 8px 6px !important;
+}
+
+.report-header-checkbox,
+.report-row-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #2563EB;
+  cursor: pointer;
+  vertical-align: middle;
+  border-radius: 3px;
+}
+
+.report-row-selected td {
+  background-color: #EFF6FF !important;
+}
+
+/* Report Dropdowns (Print & Export) */
+.report-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.report-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  min-width: 155px;
+  z-index: 1000;
+  padding: 4px 0;
+}
+
+.report-dropdown-menu.show {
+  display: block;
+}
+
+.report-dropdown-item {
+  display: block;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #334155;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.report-dropdown-item:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+
+/* ==========================================================================
+   USER INFORMATION FORM (Screenshot 3 Exact 1:1 Design)
+   ========================================================================== */
+.user-info-form-card {
+  background: #FFFFFF;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  padding: 24px 32px 30px 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.user-info-form-header {
+  border-bottom: 1px solid #E2E8F0;
+  padding-bottom: 16px;
+  margin-bottom: 26px;
+}
+
+.user-info-form-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1E293B;
+  letter-spacing: -0.2px;
+}
+
+.user-info-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px 36px;
+}
+
+.user-form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-form-field label {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #1E293B;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.user-form-field label .required-star {
+  color: #EF4444;
+  margin-left: 3px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.user-form-control {
+  height: 42px;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-size: 14px;
+  color: #1E293B;
+  background: #FFFFFF;
+  outline: none;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.user-form-control:focus {
+  border-color: #6366F1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.user-form-select-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.user-form-select-wrap select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 36px;
+  cursor: pointer;
+  background: #FFFFFF;
+}
+
+.user-form-select-wrap::after {
+  content: '\f078';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94A3B8;
+  font-size: 11px;
+  pointer-events: none;
+}
+
+.phone-input-group {
+  display: flex;
+  align-items: center;
+  height: 42px;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  background: #FFFFFF;
+  overflow: hidden;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.phone-input-group:focus-within {
+  border-color: #6366F1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.phone-prefix {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  height: 100%;
+  font-size: 13.5px;
+  color: #475569;
+  background: #F8FAFC;
+  border-right: 1px solid #E2E8F0;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.phone-prefix .flag-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.phone-number-field {
+  flex: 1;
+  height: 100%;
+  border: none;
+  outline: none;
+  padding: 0 14px;
+  font-size: 14px;
+  color: #1E293B;
+  background: transparent;
+}
+
+.phone-number-field::placeholder {
+  color: #94A3B8;
+}
+
+.user-info-form-actions {
+  margin-top: 28px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid #F1F5F9;
+}
+
+/* Organization pill tag in table */
+.org-type-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #EFF6FF;
+  color: #1D4ED8;
+  border: 1px solid #BFDBFE;
+}
+
+.org-type-pill.direct-subscriber {
+  background: #EFF6FF;
+  color: #1D4ED8;
+  border-color: #BFDBFE;
+}
+
+.org-type-pill.reseller,
+.org-type-pill.reseller-client {
+  background: #FAF5FF;
+  color: #7E22CE;
+  border-color: #E9D5FF;
+}
+
+.persona-item:hover {
+  background-color: #F1F5F9;
+}
+

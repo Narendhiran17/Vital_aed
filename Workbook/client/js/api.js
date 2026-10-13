@@ -11,27 +11,27 @@ class ApiService {
   }
 
   initStorage() {
-    // In-Memory Clean Slate: All records start empty in RAM and are populated
-    // exclusively from live Zoho Creator reports on every authenticated session.
-    if (!localStorage.getItem('aed_initialized')) {
-      localStorage.setItem('aed_equipment', '[]');
-      localStorage.setItem('aed_inspections', '[]');
-      localStorage.setItem('aed_locations', '[]');
-      localStorage.setItem('aed_cpr', '[]');
-      localStorage.setItem('aed_rescue', '[]');
-      localStorage.setItem('aed_system_logs', '[]');
-      localStorage.setItem('aed_users', '[]');
-      localStorage.setItem('aed_organizations', '[]');
-      localStorage.setItem('aed_deleted_ids', '[]');
-      localStorage.setItem('aed_initialized', 'true');
-    }
-  }
+    const DATA_VERSION = "12.0.0-catalyst-real-users";
+    if (localStorage.getItem('aed_data_version') !== DATA_VERSION) {
+      const eq = typeof INITIAL_DATA !== 'undefined' ? (INITIAL_DATA.equipment || []) : [];
+      const loc = typeof INITIAL_DATA !== 'undefined' ? (INITIAL_DATA.locations || []) : [];
+      const org = typeof INITIAL_DATA !== 'undefined' ? (INITIAL_DATA.organizations || []) : [];
+      const usr = typeof INITIAL_DATA !== 'undefined' ? (INITIAL_DATA.users || []) : [];
+      const insp = typeof INITIAL_DATA !== 'undefined' ? (INITIAL_DATA.inspections || []) : [];
+      const cpr = typeof INITIAL_DATA !== 'undefined' ? (INITIAL_DATA.cprCertifications || []) : [];
+      const rsc = typeof INITIAL_DATA !== 'undefined' ? (INITIAL_DATA.rescueEvents || []) : [];
 
-  clearCache() {
-    if (typeof window.__clearAedMemoryStore === 'function') {
-      window.__clearAedMemoryStore();
+      localStorage.setItem('aed_equipment', JSON.stringify(eq));
+      localStorage.setItem('aed_inspections', JSON.stringify(insp));
+      localStorage.setItem('aed_locations', JSON.stringify(loc));
+      localStorage.setItem('aed_cpr', JSON.stringify(cpr));
+      localStorage.setItem('aed_rescue', JSON.stringify(rsc));
+      localStorage.setItem('aed_system_logs', '[]');
+      localStorage.setItem('aed_users', JSON.stringify(usr));
+      localStorage.setItem('aed_organizations', JSON.stringify(org));
+      localStorage.setItem('aed_deleted_ids', '[]');
+      localStorage.setItem('aed_data_version', DATA_VERSION);
     }
-    this.initStorage();
   }
 
   markRecordDeleted(id) {
@@ -56,7 +56,16 @@ class ApiService {
   }
 
   clearAllPortalRecords() {
-    this.clearCache();
+    localStorage.setItem('aed_equipment', '[]');
+    localStorage.setItem('aed_inspections', '[]');
+    localStorage.setItem('aed_locations', '[]');
+    localStorage.setItem('aed_cpr', '[]');
+    localStorage.setItem('aed_rescue', '[]');
+    localStorage.setItem('aed_system_logs', '[]');
+    localStorage.setItem('aed_users', '[]');
+    localStorage.setItem('aed_organizations', '[]');
+    localStorage.setItem('aed_deleted_ids', '[]');
+    localStorage.setItem('aed_data_version', "10.0.0-seed-populated");
   }
 
   // Authentication
@@ -114,56 +123,6 @@ class ApiService {
     }
   }
 
-  // Users Roster & RBAC Synchronization
-  async getUsers() {
-    try {
-      const res = await fetch(`${this.baseUrl}/users`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-      if (res.ok) {
-        const json = await res.json();
-        if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
-          localStorage.setItem('aed_users', JSON.stringify(json.data));
-          return json.data;
-        }
-      }
-    } catch (e) {
-      console.warn("api.getUsers error:", e);
-    }
-    const cached = JSON.parse(localStorage.getItem('aed_users') || 'null');
-    return cached || (typeof INITIAL_DATA !== 'undefined' ? INITIAL_DATA.users : []);
-  }
-
-  async updateUser(user) {
-    try {
-      const id = user.creatorRecordId || user.id || user.catalystUserId;
-      const res = await fetch(`${this.baseUrl}/users/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(user)
-      });
-      if (res.ok) {
-        const json = await res.json();
-        return json;
-      }
-    } catch (e) {
-      console.warn("api.updateUser error:", e);
-    }
-    // Optimistic local update
-    try {
-      const all = JSON.parse(localStorage.getItem('aed_users') || '[]');
-      const idx = all.findIndex(u => (u.email || '').toLowerCase() === (user.email || '').toLowerCase() || String(u.id) === String(user.id));
-      if (idx !== -1) {
-        all[idx] = { ...all[idx], ...user };
-        localStorage.setItem('aed_users', JSON.stringify(all));
-      }
-    } catch (e) {}
-    return { success: true };
-  }
-
   // Equipment
   async getEquipment(tab = 'active') {
     try {
@@ -200,7 +159,7 @@ class ApiService {
         if (creatorIds.has(String(item.id))) return false;
         const sn = cleanSn(item.serialLot);
         if (sn && sn !== '-' && creatorSerials.has(sn)) return false;
-        return item.isOptimisticPending === true;
+        return true;
       });
 
       const merged = [...creatorRecords.filter(r => !this.isRecordDeleted(r.id)), ...pendingLocal, ...otherTabs];
@@ -519,7 +478,13 @@ class ApiService {
             !this.isRecordDeleted(o.id) && 
             !this.isRecordDeleted(o.key)
           );
-          const merged = [...liveData, ...pending];
+          const remainingBase = baseOrgs.filter(o =>
+            !liveKeys.has((o.key || '').toLowerCase()) &&
+            !liveNames.has((o.name || '').toLowerCase()) &&
+            !this.isRecordDeleted(o.id) &&
+            !this.isRecordDeleted(o.key)
+          );
+          const merged = [...liveData, ...pending, ...remainingBase];
           localStorage.setItem('aed_organizations', JSON.stringify(merged));
           if (typeof INITIAL_DATA !== 'undefined') INITIAL_DATA.organizations = merged;
           return merged;
@@ -757,236 +722,86 @@ class ApiService {
       console.warn("Failed to fetch users from server, falling back to local storage:", e);
     }
     const all = JSON.parse(localStorage.getItem('aed_users') || '[]');
-    if (!all || all.length === 0) {
+    // Filter out legacy dummy users (Christine Shale, Christine Miller, Marcus, Elena, David Chen)
+    const valid = (all || []).filter(u => {
+      const email = (u.email || '').toLowerCase();
+      const isLegacyDummy = email === 'christine@vitalaed.com' || 
+                            email === 'cmiller@vitalaed.com' || 
+                            email === 'mrodriguez@miamigardens-fl.gov' || 
+                            email === 'evance@metrohealthalliance.org' || 
+                            email === 'dchen@vitalaed.com';
+      return !isLegacyDummy && !this.isRecordDeleted(u.id) && !this.isRecordDeleted(u.creatorRecordId);
+    });
+    if (!valid || valid.length === 0) {
       return await this._legacyMockUsers();
     }
-    return all.filter(u => !this.isRecordDeleted(u.id) && !this.isRecordDeleted(u.creatorRecordId));
+    return valid;
   }
 
   async _legacyMockUsers() {
     let local = [
-        {
-          id: '114503000000016049',
-          catalystUserId: '114503000000016049',
-          creatorRecordId: '4923252000000319053',
-          firstName: 'Narendhiran',
-          lastName: 'SysAdmin',
-          email: 'narendhiran3317@gmail.com',
-          phone: '(555) 100-2000',
-          role: 'Sys Admin',
-          catalystRoleId: '114503000000023036',
-          organization: 'Vital AED',
-          organizationKey: 'vital-aed',
-          locationScope: 'All Organizations',
-          status: 'Active',
-          authProvider: 'Catalyst Authentication',
-          isOwner: true,
-          invitedAt: '2026-10-09',
-          joinedAt: '2026-10-09'
-        },
-        {
-          id: '114503000000014085',
-          catalystUserId: '114503000000014085',
-          creatorRecordId: '4923252000000339002',
-          firstName: 'Hardik',
-          lastName: 'Jahan Naren',
-          email: 'hardikjahannaren@gmail.com',
-          phone: '(555) 456-7890',
-          role: 'Reseller*',
-          catalystRoleId: '114503000000023038',
-          organization: 'Vital AED',
-          organizationKey: 'vital-aed',
-          locationScope: 'Managed Client Accounts',
-          status: 'Active',
-          authProvider: 'Catalyst Authentication',
-          isOwner: false,
-          invitedAt: '2026-10-09',
-          joinedAt: '2026-10-09'
-        },
-        {
-          id: 'USR-SYSADMIN-01',
-          catalystUserId: 'CAT-SYSADMIN-01',
-          firstName: 'Christine',
-          lastName: 'Shale',
-          email: 'christine@vitalaed.com',
-          phone: '(555) 100-2000',
-          role: 'Sys Admin',
-          catalystRoleId: '114503000000023036',
-          organization: 'Vital AED Life Safety Corp (HQ)',
-          organizationKey: 'vital-aed',
-          locationScope: 'All Organizations',
-          status: 'Active',
-          authProvider: 'Catalyst Authentication',
-          isOwner: true,
-          invitedAt: '2026-08-01',
-          joinedAt: '2026-08-01'
-        },
-        {
-          id: 'USR-OWNER-01',
-          catalystUserId: 'CAT-OWNER-01',
-          firstName: 'Christine',
-          lastName: 'Miller',
-          email: 'cmiller@vitalaed.com',
-          phone: '(555) 234-5678',
-          role: 'Admin (Account owner)',
-          catalystRoleId: '114503000000023042',
-          organization: 'Vital AED Life Safety Corp (HQ)',
-          organizationKey: 'vital-aed',
-          locationScope: 'All Locations',
-          status: 'Active',
-          authProvider: 'Catalyst Authentication',
-          isOwner: true,
-          invitedAt: '2026-08-01',
-          joinedAt: '2026-08-01'
-        },
-        {
-          id: 'USR-ADMIN-01',
-          catalystUserId: 'CAT-ADMIN-01',
-          firstName: 'Marcus',
-          lastName: 'Vance',
-          email: 'mvance@vitalaed.com',
-          phone: '(555) 345-6789',
-          role: 'Admin',
-          catalystRoleId: '114503000000023040',
-          organization: 'Vital AED Life Safety Corp (HQ)',
-          organizationKey: 'vital-aed',
-          locationScope: 'All Locations',
-          status: 'Active',
-          authProvider: 'Catalyst Authentication',
-          isOwner: false,
-          invitedAt: '2026-08-05',
-          joinedAt: '2026-08-06'
-        },
-        {
-          id: 'USR-STAFF-01',
-          catalystUserId: 'CAT-STAFF-01',
-          firstName: 'Sarah',
-          lastName: 'Jenkins',
-          email: 'sjenkins@vitalaed.com',
-          phone: '(555) 567-8901',
-          role: 'Staff',
-          catalystRoleId: '114503000000023044',
-          organization: 'Vital AED Life Safety Corp (HQ)',
-          organizationKey: 'vital-aed',
-          locationScope: 'Austin Medical Center',
-          status: 'Active',
-          authProvider: 'Catalyst Authentication',
-          isOwner: false,
-          invitedAt: '2026-08-15',
-          joinedAt: '2026-08-16'
-        },
-        {
-          id: 'USR-OWNER-02',
-          catalystUserId: 'CAT-OWNER-02',
-          firstName: 'David',
-          lastName: 'Rodriguez',
-          email: 'drodriguez@miamigardensfl.gov',
-          phone: '(305) 555-0199',
-          role: 'Admin (Account owner)',
-          catalystRoleId: '114503000000023042',
-          organization: 'City of Miami Gardens - Parks & Rec',
-          organizationKey: 'miami-gardens',
-          locationScope: 'All Municipal Facilities',
-          status: 'Active',
-          authProvider: 'Catalyst Authentication',
-          isOwner: true,
-          invitedAt: '2026-08-02',
-          joinedAt: '2026-08-03'
-        },
-        {
-          id: 'USR-STAFF-02',
-          catalystUserId: 'CAT-STAFF-02',
-          firstName: 'Maria',
-          lastName: 'Rivera',
-          email: 'mrivera@miamigardensfl.gov',
-          phone: '(305) 555-0244',
-          role: 'Staff',
-          catalystRoleId: '114503000000023044',
-          organization: 'City of Miami Gardens - Parks & Rec',
-          organizationKey: 'miami-gardens',
-          locationScope: 'Betty T. Ferguson Center',
-          status: 'Active',
-          authProvider: 'Catalyst Authentication',
-          isOwner: false,
-          invitedAt: '2026-08-16',
-          joinedAt: '2026-08-17'
-        },
-        {
-          id: 'USR-RESELLER-01',
-          catalystUserId: 'CAT-RESELLER-01',
-          firstName: 'Apex Safety',
-          lastName: 'Solutions',
-          email: 'support@apexsafety.com',
-          phone: '(555) 456-7890',
-          role: 'Reseller*',
-          catalystRoleId: '114503000000023038',
-          organization: 'Apex Safety Solutions',
-          organizationKey: 'apex-reseller',
-          locationScope: 'Managed Client Accounts (Ft. Lauderdale & Coral Gables)',
-          status: 'Active',
-          authProvider: 'Catalyst Authentication',
-          isOwner: false,
-          invitedAt: '2026-08-10',
-          joinedAt: '2026-08-11'
-        },
-        {
-          id: 'USR-STAFF-03',
-          catalystUserId: 'CAT-STAFF-03',
-          firstName: 'Rachel',
-          lastName: 'Adams',
-          email: 'radams@ftlauderdalefitness.com',
-          phone: '(954) 555-4321',
-          role: 'Staff',
-          catalystRoleId: '114503000000023044',
-          organization: 'Fort Lauderdale Fitness Centers',
-          organizationKey: 'ft-lauderdale',
-          locationScope: 'Downtown Las Olas Gym',
-          status: 'Active',
-          authProvider: 'Catalyst Authentication',
-          isOwner: false,
-          invitedAt: '2026-08-12',
-          joinedAt: '2026-08-13'
-        },
-        {
-          id: 'USR-INSPECTOR-02',
-          catalystUserId: 'CAT-INSPECTOR-02',
-          firstName: 'Carlos',
-          lastName: 'Mendez',
-          email: 'cmendez@coralgablescommunity.org',
-          phone: '(305) 555-8765',
-          role: 'Inspector',
-          catalystRoleId: '114503000000023046',
-          organization: 'Coral Gables Community Center',
-          organizationKey: 'coral-gables',
-          locationScope: 'All Community Buildings',
-          status: 'Active',
-          authProvider: 'Catalyst Authentication',
-          isOwner: false,
-          invitedAt: '2026-08-18',
-          joinedAt: '2026-08-19'
-        },
-        {
-          id: 'USR-CUSTOMER-01',
-          catalystUserId: 'CAT-CUSTOMER-01',
-          firstName: 'Robert',
-          lastName: 'Chen',
-          email: 'rchen@gmail.com',
-          phone: '(555) 789-0123',
-          role: 'Customer (No Portal Access)',
-          catalystRoleId: null,
-          organization: 'Vital AED Life Safety Corp (HQ)',
-          organizationKey: 'vital-aed',
-          locationScope: 'Email Reminders Only',
-          status: 'Email Reminders Only',
-          authProvider: 'None',
-          isOwner: false,
-          invitedAt: '2026-08-20',
-          joinedAt: '-'
-        }
-      ];
+      {
+        id: '114503000000018029',
+        catalystUserId: '114503000000018029',
+        creatorRecordId: '4923252000000319053',
+        firstName: 'Narendhiran',
+        lastName: 'Admin',
+        email: 'narendhiran3317@gmail.com',
+        phone: '(555) 100-2000',
+        role: 'Sys Admin',
+        catalystRoleId: '114503000000023036',
+        organization: 'Vital AED Life Safety Corp',
+        organizationKey: 'vital-aed',
+        locationScope: 'All Organizations',
+        status: 'Active',
+        authProvider: 'Catalyst Authentication',
+        isOwner: true,
+        invitedAt: '2026-10-09',
+        joinedAt: '2026-10-09'
+      },
+      {
+        id: '114503000000014088',
+        catalystUserId: '114503000000014088',
+        creatorRecordId: '4923252000000339002',
+        firstName: 'Hardik',
+        lastName: 'Jahan Naren',
+        email: 'hardikjahannaren@gmail.com',
+        phone: '(555) 456-7890',
+        role: 'Reseller*',
+        catalystRoleId: '114503000000023038',
+        organization: 'Vital AED Life Safety Corp',
+        organizationKey: 'vital-aed',
+        locationScope: 'All Locations',
+        status: 'Active',
+        authProvider: 'Catalyst Authentication',
+        isOwner: false,
+        invitedAt: '2026-10-09',
+        joinedAt: '2026-10-09'
+      },
+      {
+        id: '114503000000037005',
+        catalystUserId: '114503000000037005',
+        creatorRecordId: '492325200000037005',
+        firstName: 'Test',
+        lastName: 'Name',
+        email: 'myvideo298@gmail.com',
+        phone: '(555) 789-0123',
+        role: 'Staff',
+        catalystRoleId: '114503000000023044',
+        organization: 'Vital AED Life Safety Corp',
+        organizationKey: 'vital-aed',
+        locationScope: 'All Locations',
+        status: 'Active',
+        authProvider: 'Catalyst Authentication',
+        isOwner: false,
+        invitedAt: '2026-10-12',
+        joinedAt: '2026-10-12'
+      }
+    ];
     localStorage.setItem('aed_users', JSON.stringify(local));
     return local;
   }
+
 
   async inviteUser(user) {
     this.stampOrganization(user);

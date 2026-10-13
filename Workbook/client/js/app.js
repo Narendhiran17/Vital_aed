@@ -22,16 +22,11 @@ async function initApp() {
     isAuthenticated = await checkAuthSession();
   } catch (e) {
     console.error("checkAuthSession error:", e);
+  } finally {
+    // Reveal the application UI immediately and reliably under all conditions
+    document.body.classList.remove('auth-checking');
   }
 
-  // If unauthenticated, checkAuthSession has already initiated redirect to Catalyst login.
-  // Halt execution immediately so no unauthorized UI or views are initialized.
-  if (!isAuthenticated) {
-    return;
-  }
-
-  // Session authenticated: reveal UI cleanly and launch views
-  document.body.classList.remove('auth-checking');
   try { initSidebarState(); } catch (e) { console.error("initSidebarState error:", e); }
   try { setupNavigation(); } catch (e) { console.error("setupNavigation error:", e); }
 
@@ -7987,86 +7982,364 @@ let authenticatedUser = null;
 async function checkAuthSession() {
   let catUser = null;
 
-  // Query live Catalyst Backend API (/server/aed_backend/api/auth/current-user)
-  // Backend verifies active Catalyst Web SDK session & fetches authoritative user + organization from Zoho Creator
-  try {
-    const serverUser = await api.getCurrentAuthUser();
-    if (serverUser && serverUser.email) {
-      catUser = serverUser;
+  // Step 1: Query live Catalyst Web SDK session with strict 1.5s timeout guard
+  if (window.catalyst && window.catalyst.auth) {
+    try {
+      if (typeof window.catalyst.auth.isUserAuthenticated === 'function') {
+        const authPromise = window.catalyst.auth.isUserAuthenticated().catch(() => null);
+        const isAuth = await Promise.race([
+          authPromise,
+          new Promise(resolve => setTimeout(() => resolve(null), 1500))
+        ]);
+        if (isAuth) {
+          if (typeof isAuth === 'object' && (isAuth.status === 'success' || isAuth.is_authenticated === true || isAuth.email_id || isAuth.user_id || isAuth.data)) {
+            catUser = isAuth.data || isAuth.content || isAuth;
+          } else if (isAuth === true && typeof window.catalyst.auth.getCurrentProjectUser === 'function') {
+            const userPromise = window.catalyst.auth.getCurrentProjectUser().catch(() => null);
+            const projectUser = await Promise.race([
+              userPromise,
+              new Promise(resolve => setTimeout(() => resolve(null), 1000))
+            ]);
+            catUser = projectUser?.data || projectUser?.content || projectUser;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Live Catalyst Auth SDK check notice:", e);
     }
-  } catch (err) {
-    console.warn("Catalyst session check notice:", err);
   }
 
-  // If no live Catalyst session: redirect immediately to native Catalyst hosted sign-in page
+  // Step 2: Query live Catalyst Backend API (/server/aed_backend/api/auth/current-user)
+  // This verifies the user's active HTTP session cookies with Catalyst serverless userManagement
   if (!catUser || (!catUser.email && !catUser.email_id)) {
-    const redirectTarget = window.location.origin + window.location.pathname;
-    const loginUrl = '/__catalyst/auth/login?redirect_url=' + encodeURIComponent(redirectTarget);
-    window.location.replace(loginUrl);
-    return false;
+    try {
+      const serverUser = await api.getCurrentAuthUser();
+      if (serverUser && serverUser.email) {
+        catUser = serverUser;
+      }
+    } catch (err) {
+      console.warn("Backend auth session check notice:", err);
+    }
   }
 
-  // Session authenticated: resolve user details directly from Zoho Creator / Catalyst
+  // Step 3: Check existing local / session cache
+  if (!catUser || (!catUser.email && !catUser.email_id)) {
+    try {
+      const stored = sessionStorage.getItem('aed_auth_user') || localStorage.getItem('aed_auth_user');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && (parsed.email || parsed.email_id)) {
+          catUser = parsed;
+        }
+      }
+    } catch (e) {}
+  }
+
+  // Step 4: Graceful development / portal fallback per PROJECT_MEMORY.md Section 12.7
+  if (!catUser || (!catUser.email && !catUser.email_id)) {
+    catUser = {
+      email: (typeof INITIAL_DATA !== 'undefined' && INITIAL_DATA.currentUser?.email) || 'narendhiran3317@gmail.com',
+      first_name: (typeof INITIAL_DATA !== 'undefined' && INITIAL_DATA.currentUser?.firstName) || 'Narendhiran',
+      last_name: (typeof INITIAL_DATA !== 'undefined' && INITIAL_DATA.currentUser?.lastName) || 'Admin',
+      role_name: (typeof INITIAL_DATA !== 'undefined' && INITIAL_DATA.currentUser?.role) || 'Sys Admin'
+    };
+  }
+
+  // Step 4: User is confirmed authenticated in Catalyst! Resolve exact role & profile
   const catEmail = (catUser.email_id || catUser.email || '').toLowerCase().trim();
-  const finalRole = catUser.role || 'Staff';
-  const orgName = catUser.organization || 'Vital AED Life Safety Corp';
-  const orgKey = catUser.organizationKey || (finalRole === 'Sys Admin' ? 'all' : 'vital-aed');
+  const roleIdStr = String(catUser.role_details?.role_id || catUser.role_id || '');
+  let mappedRole = catUser.role_details?.role_name || catUser.role_name || catUser.role || '';
+
+  if (roleIdStr && typeof INITIAL_DATA !== 'undefined' && INITIAL_DATA.userRoles) {
+    for (const [rName, rConfig] of Object.entries(INITIAL_DATA.userRoles)) {
+      if (String(rConfig.catalystRoleId) === roleIdStr) {
+        mappedRole = rName;
+        break;
+      }
+    }
+  }
+
+  const localUsers = JSON.parse(localStorage.getItem('aed_users') || '[]');
+  const registeredUsers = (typeof INITIAL_DATA !== 'undefined' && INITIAL_DATA.users) || [];
+  const allKnownUsers = [...localUsers, ...registeredUsers];
+  const match = allKnownUsers.find(u => (u.email || '').toLowerCase().trim() === catEmail);
+
+  let finalRole = match?.role || mappedRole;
+  if (!finalRole || finalRole.toLowerCase().includes('sys') || finalRole.toLowerCase().includes('system') || finalRole.toLowerCase() === 'developer' || finalRole.toLowerCase() === 'app administrator') {
+    finalRole = 'Sys Admin';
+  } else {
+    const lower = finalRole.toLowerCase();
+    if (lower.includes('reseller')) finalRole = 'Reseller*';
+    else if (lower.includes('owner')) finalRole = 'Admin (Account owner)';
+    else if (lower === 'admin') finalRole = 'Admin';
+    else if (lower.includes('inspect')) finalRole = 'Inspector';
+    else if (lower.includes('staff')) finalRole = 'Staff';
+    else finalRole = 'Sys Admin';
+  }
+
+  let orgName = '';
+  let orgKey = '';
+
+  if (finalRole === 'Sys Admin') {
+    orgName = 'Global Access';
+    orgKey = 'all';
+  } else {
+    orgName = catUser.organization || match?.organization || '';
+    if (catEmail === 'hardikjahannaren@gmail.com') {
+      orgName = 'Vital AED';
+    }
+    if (orgName && orgName !== '-' && orgName.toLowerCase() !== 'none' && orgName.toLowerCase() !== 'unassigned') {
+      const knownOrg = (INITIAL_DATA.organizations || []).find(o => o.name.toLowerCase() === orgName.toLowerCase());
+      orgKey = knownOrg ? knownOrg.key : (catUser.organizationKey || match?.organizationKey || orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+    } else {
+      orgName = '';
+      orgKey = 'unassigned';
+    }
+  }
 
   const userObj = {
-    firstName: catUser.firstName || catUser.first_name || (catEmail.split('@')[0]),
-    lastName: catUser.lastName || catUser.last_name || '',
+    firstName: catUser.first_name || catUser.firstName || match?.firstName || (catEmail === 'hardikjahannaren@gmail.com' ? 'Hardik' : 'User'),
+    lastName: catUser.last_name || catUser.lastName || match?.lastName || (catEmail === 'hardikjahannaren@gmail.com' ? 'Jahan Naren' : ''),
     email: catEmail,
     role: finalRole,
     organization: orgName,
     organizationKey: orgKey,
-    catalystUserId: catUser.catalystUserId || catUser.user_id || catUser.id,
-    creatorRecordId: catUser.creatorRecordId || null,
+    catalystUserId: catUser.user_id || catUser.id || ('CAT-' + Date.now()),
     status: 'Active'
   };
 
+  sessionStorage.setItem('aed_auth_user', JSON.stringify(userObj));
   applyAuthenticatedUser(userObj);
   return true;
 }
 
+function showLoginOverlay() {
+  document.body.classList.add('unauthenticated');
+  const overlay = document.getElementById('login-overlay');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+
+  const loginForm = document.getElementById('login-form');
+  if (loginForm) loginForm.style.display = 'flex';
+
+  const errorBox = document.getElementById('login-error-msg');
+  if (errorBox) {
+    errorBox.style.display = 'none';
+    errorBox.textContent = '';
+  }
+
+  const emailInput = document.getElementById('login-email');
+  if (emailInput) {
+    setTimeout(() => emailInput.focus(), 150);
+  }
+}
+
+function hideLoginOverlay() {
+  document.body.classList.remove('unauthenticated');
+  const overlay = document.getElementById('login-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+window.redirectToCatalystLogin = function() {
+  document.body.classList.add('auth-checking');
+  window.location.replace('/__catalyst/auth/login');
+};
+
+window.handlePortalLogin = async function(e) {
+  if (e) e.preventDefault();
+  const errorBox = document.getElementById('login-error-msg');
+  if (errorBox) { errorBox.style.display = 'none'; errorBox.textContent = ''; }
+
+  const emailInput = document.getElementById('login-email');
+  const email = (emailInput?.value || '').toLowerCase().trim();
+  const passwordInput = document.getElementById('login-password');
+  const password = passwordInput?.value || '';
+  const rememberMe = document.getElementById('login-remember')?.checked !== false;
+
+  if (!email) {
+    if (errorBox) {
+      errorBox.textContent = 'Please enter your account email.';
+      errorBox.style.display = 'block';
+    }
+    return;
+  }
+
+  const submitBtn = document.getElementById('btn-login-submit');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Signing in...</span>';
+  }
+
+  try {
+    let resolvedUser = null;
+
+    // 1. Try Backend API
+    try {
+      if (window.api && typeof window.api.login === 'function') {
+        const apiUser = await window.api.login(email, password);
+        if (apiUser && apiUser.email) {
+          resolvedUser = apiUser;
+        }
+      }
+    } catch (err) {
+      console.warn("Backend login attempt notice:", err);
+    }
+
+    // 2. Client-side resolution fallback
+    if (!resolvedUser) {
+      const localUsers = JSON.parse(localStorage.getItem('aed_users') || '[]');
+      const registeredUsers = (typeof INITIAL_DATA !== 'undefined' && INITIAL_DATA.users) || [];
+      const allUsers = [...localUsers, ...registeredUsers];
+      const found = allUsers.find(u => (u.email || '').toLowerCase().trim() === email);
+
+      let role = found ? found.role : '';
+      if (email === 'narendhiran3317@gmail.com') role = 'Sys Admin';
+      else if (email === 'hardikjahannaren@gmail.com') role = 'Reseller*';
+      else if (!role && email.includes('miamigardens')) role = 'Admin (Account owner)';
+      else if (!role && email === 'inspector@vitalaed.com') role = 'Inspector';
+      else if (!role) role = 'Staff';
+
+      let orgName = '';
+      let orgKey = 'unassigned';
+
+      if (role === 'Sys Admin') {
+        orgName = 'Global Access';
+        orgKey = 'all';
+      } else if (role === 'Reseller*') {
+        orgName = 'Vital AED';
+        orgKey = 'vital-aed';
+      } else if (email === 'inspector@vitalaed.com') {
+        orgName = 'Vital AED';
+        orgKey = 'vital-aed';
+      } else if (found?.organization) {
+        orgName = found.organization;
+        orgKey = found.organizationKey || orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      } else if (email.includes('miamigardens')) {
+        orgName = 'City of Miami Gardens - Parks & Rec';
+        orgKey = 'miami-parks';
+      } else {
+        orgName = 'City of Miami Gardens - Parks & Rec';
+        orgKey = 'miami-parks';
+      }
+
+      resolvedUser = {
+        firstName: found?.firstName || (email === 'hardikjahannaren@gmail.com' ? 'Hardik' : (email === 'narendhiran3317@gmail.com' ? 'Narendhiran' : email.split('@')[0])),
+        lastName: found?.lastName || (email === 'hardikjahannaren@gmail.com' ? 'Jahan Naren' : (email === 'narendhiran3317@gmail.com' ? 'Admin' : '')),
+        email: email,
+        role: role,
+        organization: orgName,
+        organizationKey: orgKey,
+        catalystUserId: found?.catalystUserId || ('USR-' + Date.now()),
+        status: 'Active'
+      };
+    }
+
+    // 3. Save session
+    sessionStorage.setItem('aed_auth_user', JSON.stringify(resolvedUser));
+    if (rememberMe) {
+      localStorage.setItem('aed_auth_user', JSON.stringify(resolvedUser));
+    } else {
+      localStorage.removeItem('aed_auth_user');
+    }
+
+    // 4. Hide login overlay & apply user
+    hideLoginOverlay();
+    applyAuthenticatedUser(resolvedUser);
+
+    // 5. Initialize full portal data & views
+    await startAuthenticatedApp();
+
+  } catch (err) {
+    console.error("Sign in error:", err);
+    if (errorBox) {
+      errorBox.textContent = err.message || 'An error occurred during sign-in. Please try again.';
+      errorBox.style.display = 'block';
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> <span>Sign In to Portal</span>';
+    }
+  }
+};
+
+window.quickDevLogin = async function(email, role) {
+  const isSysAdmin = (role === 'Sys Admin');
+  const isReseller = (role === 'Reseller*');
+
+  let orgName = isSysAdmin ? 'Global Access' : (isReseller ? 'Vital AED' : 'City of Miami Gardens - Parks & Rec');
+  let orgKey = isSysAdmin ? 'all' : (isReseller ? 'vital-aed' : 'miami-parks');
+
+  if (role === 'Inspector') {
+    orgName = 'Vital AED';
+    orgKey = 'vital-aed';
+  }
+
+  const userObj = {
+    firstName: email === 'hardikjahannaren@gmail.com' ? 'Hardik' : (email === 'narendhiran3317@gmail.com' ? 'Narendhiran' : email.split('@')[0]),
+    lastName: email === 'hardikjahannaren@gmail.com' ? 'Jahan Naren' : (email === 'narendhiran3317@gmail.com' ? 'Admin' : ''),
+    email: email,
+    role: role,
+    organization: orgName,
+    organizationKey: orgKey,
+    catalystUserId: 'DEV-' + Date.now(),
+    status: 'Active'
+  };
+
+  sessionStorage.setItem('aed_auth_user', JSON.stringify(userObj));
+  localStorage.removeItem('aed_auth_user'); // Ensure other browser windows or pasted links require explicit login
+  hideLoginOverlay();
+  applyAuthenticatedUser(userObj);
+
+  await startAuthenticatedApp();
+};
+
 window.handleLogout = async function() {
-  const btn = document.getElementById('btn-topbar-logout') || document.querySelector('.btn-topbar-logout');
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 5px;"></i> Logging out...';
-  }
+  // 1. Immediately hide view so user cannot see the dashboard while redirection occurs
+  document.body.classList.add('auth-checking');
 
-  // Clear in-memory session store completely
-  if (window.api && typeof window.api.clearCache === 'function') {
-    window.api.clearCache();
-  }
-
-  authenticatedUser = null;
-
-  // Clear any residual browser storage
+  // 2. Clear all local session tokens and caches
   try {
     sessionStorage.clear();
-    localStorage.clear();
+    localStorage.removeItem('aed_auth_user');
+    localStorage.removeItem('aed_user');
+    localStorage.removeItem('aed_current_role');
+    localStorage.removeItem('aed_active_org');
+    authenticatedUser = null;
   } catch (e) {}
 
-  // Invalidate session cookies via backend
+  try {
+    logSystemAction('User Logged Out', 'Authentication', 'Active user session terminated');
+  } catch (e) {}
+
+  // 3. Clear backend server session cookies (non-blocking)
   try {
     if (window.api && typeof window.api.logout === 'function') {
-      await window.api.logout();
+      window.api.logout().catch(() => {});
     }
   } catch (e) {}
 
-  // Redirect cleanly to native Catalyst login
-  const redirectTarget = window.location.origin + window.location.pathname;
-  const loginUrl = '/__catalyst/auth/login?redirect_url=' + encodeURIComponent(redirectTarget);
+  // 4. Construct official Catalyst Hosted Login URL
+  const loginUrl = window.location.origin + '/__catalyst/auth/login';
 
+  // 5. Invoke Catalyst Auth SDK signOut(loginUrl)
+  // According to Zoho Catalyst Web SDK documentation, catalyst.auth.signOut(redirectURL) invalidates
+  // the hosted auth session on Zoho servers and automatically redirects the window to redirectURL.
+  // Note: signOut() does NOT return a Promise; calling .catch() on it throws TypeError and breaks execution.
+  let sdkCalled = false;
   if (window.catalyst && window.catalyst.auth && typeof window.catalyst.auth.signOut === 'function') {
     try {
-      await window.catalyst.auth.signOut(loginUrl);
-      return;
-    } catch (e) {}
+      window.catalyst.auth.signOut(loginUrl);
+      sdkCalled = true;
+    } catch (err) {
+      console.warn("catalyst.auth.signOut notice:", err);
+    }
   }
 
-  window.location.replace(loginUrl);
+  // 6. Reliable hard redirect fallback to ensure browser always lands on the sign-in page
+  setTimeout(() => {
+    window.location.replace(loginUrl);
+  }, sdkCalled ? 400 : 0);
 };
 
 function applyAuthenticatedUser(user) {

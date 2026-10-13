@@ -6,7 +6,6 @@
     "targets": [
       "aed_backend"
     ],
-    "ignore": [],
-    "source": "functions"
+    "ignore": []
   }
 }

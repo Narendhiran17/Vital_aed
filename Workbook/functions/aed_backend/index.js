@@ -27,30 +27,54 @@ app.use((req, res, next) => {
 });
 
 // In-Memory Fallback Cache for fast local responses
+// In-Memory Fallback Cache populated with real Catalyst project users
 const memoryCache = {
   systemLogs: [],
   users: [
     {
-      id: 'USR-SYSADMIN-01',
+      id: '114503000000018029',
+      catalystUserId: '114503000000018029',
       firstName: 'Narendhiran',
-      lastName: 'SysAdmin',
+      lastName: 'Admin',
       email: 'narendhiran3317@gmail.com',
       phone: '(555) 100-2000',
       role: 'Sys Admin',
-      organization: 'Vital AED',
+      status: 'Active',
+      organization: 'Vital AED Life Safety Corp',
       organizationKey: 'vital-aed',
-      status: 'Active'
+      locationScope: 'All Organizations',
+      authProvider: 'Catalyst Authentication',
+      isOwner: true
     },
     {
-      id: 'USR-RESELLER-01',
+      id: '114503000000014088',
+      catalystUserId: '114503000000014088',
       firstName: 'Hardik',
       lastName: 'Jahan Naren',
       email: 'hardikjahannaren@gmail.com',
       phone: '(555) 456-7890',
       role: 'Reseller*',
-      organization: 'Vital AED',
+      status: 'Active',
+      organization: 'Vital AED Life Safety Corp',
       organizationKey: 'vital-aed',
-      status: 'Active'
+      locationScope: 'All Locations',
+      authProvider: 'Catalyst Authentication',
+      isOwner: false
+    },
+    {
+      id: '114503000000037005',
+      catalystUserId: '114503000000037005',
+      firstName: 'Test',
+      lastName: 'Name',
+      email: 'myvideo298@gmail.com',
+      phone: '(555) 789-0123',
+      role: 'Staff',
+      status: 'Active',
+      organization: 'Vital AED Life Safety Corp',
+      organizationKey: 'vital-aed',
+      locationScope: 'All Locations',
+      authProvider: 'Catalyst Authentication',
+      isOwner: false
     }
   ]
 };
@@ -446,6 +470,42 @@ app.post('/api/cpr', async (req, res) => {
 // ==========================================
 
 app.get('/api/users', async (req, res) => {
+  // 1. Fetch live users directly from Catalyst User Management
+  try {
+    if (req.catalystApp) {
+      const userManagement = req.catalystApp.userManagement();
+      const catalystUsers = await userManagement.getAllUsers();
+      if (Array.isArray(catalystUsers) && catalystUsers.length > 0) {
+        const users = catalystUsers.map(u => {
+          const roleName = u.role_details?.role_name || 'Staff';
+          const isSysAdmin = roleName === 'Sys Admin';
+          const isReseller = roleName === 'Reseller';
+          return {
+            id: String(u.user_id),
+            catalystUserId: String(u.user_id),
+            firstName: u.first_name || '',
+            lastName: u.last_name || '',
+            email: u.email_id || '',
+            phone: u.phone_number || '',
+            role: isReseller ? 'Reseller*' : roleName,
+            status: u.status === 'ACTIVE' ? 'Active' : (u.status || 'Active'),
+            organization: 'Vital AED Life Safety Corp',
+            organizationKey: 'vital-aed',
+            locationScope: isSysAdmin ? 'All Organizations' : 'All Locations',
+            authProvider: 'Catalyst Authentication',
+            isOwner: isSysAdmin,
+            invitedAt: u.invited_time || u.created_time || '',
+            joinedAt: u.created_time || ''
+          };
+        });
+        return res.json({ source: 'catalyst', success: true, data: users });
+      }
+    }
+  } catch (err) {
+    console.warn("Could not retrieve users via Catalyst SDK userManagement:", err.message);
+  }
+
+  // 2. Fallback to Creator Users report if present
   try {
     const usersRes = await creator.getRecords('Users', {}, req);
     if (usersRes && Array.isArray(usersRes.data) && usersRes.data.length > 0) {
@@ -458,11 +518,15 @@ app.get('/api/users', async (req, res) => {
         phone: u.Phone || '',
         role: u.Role || 'Staff',
         status: u.Status || 'Active',
-        organization: u.Organization?.display_value || u.Organization || 'Vital AED'
+        organization: u.Organization?.display_value || u.Organization || 'Vital AED',
+        organizationKey: 'vital-aed',
+        locationScope: 'All Locations'
       }));
       return res.json({ source: 'creator', success: true, data: users });
     }
   } catch (e) {}
+
+  // 3. Fallback to pre-cached real Catalyst users
   return res.json({ source: 'local', success: true, data: memoryCache.users });
 });
 

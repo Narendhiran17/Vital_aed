@@ -1,0 +1,8 @@
+node_modules/
+package-lock.json
+.env
+*.env
+.catalyst/
+catalyst.log
+*.log
+powershell.cmd

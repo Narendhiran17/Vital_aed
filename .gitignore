@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables & secrets (Never commit secrets)
+.env
+.env.local
+.env.*.local
+*.env
+
+# Catalyst & Zoho build / runtime artifacts
+.catalyst/
+catalyst-cache/
+__catalyst/
+catalyst.log
+*.log
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editor files
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.sublime-workspace
+
+# Temporary & Lock files
+~$*
+*.tmp
+*.bak
+scratch/
+test_write.txt

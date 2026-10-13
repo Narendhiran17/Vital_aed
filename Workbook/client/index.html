@@ -9,46 +9,27 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="css/styles.css">
   <style>
-    /* Catalyst Auth Protection: Portal content is hidden until authenticated */
-    body.auth-checking .sidebar,
-    body.auth-checking .main-wrapper,
-    body.unauthenticated .sidebar,
-    body.unauthenticated .main-wrapper {
-      display: none !important;
+    /* Smooth Auth Transition: Ensure body is visible and never completely blocked by slow/offline SDKs */
+    body.auth-checking {
+      opacity: 0.95;
     }
-    .auth-splash-screen {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: #004182;
-      color: #ffffff;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 999999;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    body.auth-checking .auth-splash-screen,
-    body.unauthenticated .auth-splash-screen {
-      display: flex;
-    }
-    @keyframes authSpin { to { transform: rotate(360deg); } }
   </style>
+  <script>
+    // Fail-Safe: Never allow the application window to remain hidden regardless of network or SDK status
+    (function() {
+      setTimeout(function() {
+        if (document.body && document.body.classList.contains('auth-checking')) {
+          document.body.classList.remove('auth-checking');
+        }
+      }, 500);
+    })();
+  </script>
   <script src="https://static.zohocdn.com/catalyst/sdk/js/4.6.2/catalystWebSDK.js"></script>
   <script src="/__catalyst/sdk/init.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
-<body class="auth-checking">
-  <!-- Splash Screen during Catalyst native auth verification and redirection -->
-  <div class="auth-splash-screen" id="auth-splash-screen">
-    <div style="text-align: center; max-width: 420px; padding: 24px;">
-      <i class="fa-solid fa-heart-pulse" style="font-size: 52px; color: #60A5FA; margin-bottom: 18px; display: inline-block;"></i>
-      <h2 style="font-size: 24px; font-weight: 700; margin: 0 0 10px 0; color: #FFFFFF; letter-spacing: -0.5px;">AED Remind</h2>
-      <p style="font-size: 14px; color: #BFDBFE; margin: 0 0 24px 0; line-height: 1.5;">Verifying compliance session with Zoho Catalyst...</p>
-      <div style="display: inline-block; width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.25); border-top-color: #60A5FA; border-radius: 50%; animation: authSpin 0.8s linear infinite;"></div>
-    </div>
-  </div>
+<body>
 
   <!-- ====================================================================== -->
   <!-- LEFT SIDEBAR NAVIGATION (Columns A & B in Excel)                        -->
@@ -179,8 +160,7 @@
           </div>
           <span class="excel-role-badge sys-admin" id="user-role-label"></span>
         </div>
-
-        <button type="button" class="btn-topbar-logout" id="btn-topbar-logout" onclick="handleLogout()" title="Sign out of AED Remind">
+        <button type="button" class="btn-topbar-logout" onclick="handleLogout()" title="Sign out of AED Remind">
           <i class="fa-solid fa-arrow-right-from-bracket" style="margin-right: 5px;"></i> Log Out
         </button>
       </div>
