@@ -1,0 +1,2924 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AED Remind — Life Safety Compliance Map</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* Catalyst Auth Protection: Portal content is hidden until authenticated */
+    body.auth-checking .sidebar,
+    body.auth-checking .main-wrapper,
+    body.unauthenticated .sidebar,
+    body.unauthenticated .main-wrapper {
+      display: none !important;
+    }
+    .auth-splash-screen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #004182;
+      color: #ffffff;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 999999;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body.auth-checking .auth-splash-screen,
+    body.unauthenticated .auth-splash-screen {
+      display: flex;
+    }
+    @keyframes authSpin { to { transform: rotate(360deg); } }
+  </style>
+  <script src="https://static.zohocdn.com/catalyst/sdk/js/4.6.2/catalystWebSDK.js"></script>
+  <script src="/__catalyst/sdk/init.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+
+<body class="auth-checking">
+  <!-- Splash Screen during Catalyst native auth verification and redirection -->
+  <div class="auth-splash-screen" id="auth-splash-screen">
+    <div style="text-align: center; max-width: 420px; padding: 24px;">
+      <i class="fa-solid fa-heart-pulse" style="font-size: 52px; color: #60A5FA; margin-bottom: 18px; display: inline-block;"></i>
+      <h2 style="font-size: 24px; font-weight: 700; margin: 0 0 10px 0; color: #FFFFFF; letter-spacing: -0.5px;">AED Remind</h2>
+      <p style="font-size: 14px; color: #BFDBFE; margin: 0 0 24px 0; line-height: 1.5;">Verifying compliance session with Zoho Catalyst...</p>
+      <div style="display: inline-block; width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.25); border-top-color: #60A5FA; border-radius: 50%; animation: authSpin 0.8s linear infinite;"></div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- LEFT SIDEBAR NAVIGATION (Columns A & B in Excel)                        -->
+  <!-- ====================================================================== -->
+  <aside class="sidebar" id="sidebar">
+    <script>
+      (function() {
+        try {
+          if (localStorage.getItem('aed_sidebar_collapsed') === 'true') {
+            document.getElementById('sidebar')?.classList.add('collapsed');
+            document.body?.classList.add('sidebar-collapsed');
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <i class="fa-solid fa-heart-pulse"></i>
+        <h2>AED Remind</h2>
+      </div>
+      <button type="button" class="sidebar-toggle-btn" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="Collapse Sidebar">
+        <i class="fa-solid fa-angles-left"></i>
+      </button>
+    </div>
+
+    <ul class="sidebar-menu">
+      <!-- Core Operations -->
+      <li class="sidebar-item">
+        <a class="sidebar-link active" data-view="dashboard" data-tooltip="Dashboard">
+          <i class="fa-solid fa-chart-line"></i>
+          <span class="sidebar-link-text">Dashboard</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a class="sidebar-link" data-view="equipment" data-tooltip="Equipment">
+          <i class="fa-solid fa-heart-pulse"></i>
+          <span class="sidebar-link-text">Equipment</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a class="sidebar-link sub-item" data-view="spare" data-tooltip="Spare">
+          <i class="fa-solid fa-boxes-stacked"></i>
+          <span class="sidebar-link-text">Spare</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a class="sidebar-link" data-view="inspections" data-tooltip="Inspections">
+          <i class="fa-solid fa-clipboard-check"></i>
+          <span class="sidebar-link-text">Inspections</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a class="sidebar-link" data-view="rescue" data-tooltip="Rescue Events">
+          <i class="fa-solid fa-truck-medical"></i>
+          <span class="sidebar-link-text">Rescue Events</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a class="sidebar-link" data-view="cpr" data-tooltip="CPR Certification">
+          <i class="fa-solid fa-award"></i>
+          <span class="sidebar-link-text">CPR Certification</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a class="sidebar-link" data-view="locations" data-tooltip="Locations">
+          <i class="fa-solid fa-location-dot"></i>
+          <span class="sidebar-link-text">Locations</span>
+        </a>
+      </li>
+
+      <!-- Administration Group -->
+      <li class="sidebar-divider"></li>
+      <div class="sidebar-group-title">Account</div>
+      <li class="sidebar-item">
+        <a class="sidebar-link" data-view="users" data-tooltip="Users">
+          <i class="fa-solid fa-users-gear"></i>
+          <span class="sidebar-link-text">Users</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a class="sidebar-link" data-view="system-log" data-tooltip="System Log">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span class="sidebar-link-text">System Log</span>
+        </a>
+      </li>
+
+    </ul>
+
+    <!-- Sidebar User Footer -->
+    <div class="sidebar-user-footer" id="sidebar-user-footer" data-tooltip="User Profile">
+      <div class="sidebar-user-avatar">
+        <i class="fa-solid fa-circle-user"></i>
+      </div>
+      <div class="sidebar-user-details">
+        <span class="sidebar-user-name" id="sidebar-user-name">Loading...</span>
+        <span class="sidebar-user-role" id="sidebar-user-role"></span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ====================================================================== -->
+  <!-- MAIN CONTENT AREA (Columns C+ in Excel)                                -->
+  <!-- ====================================================================== -->
+  <div class="main-wrapper">
+    <!-- Utility Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button type="button" class="topbar-sidebar-toggle" id="topbar-sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <!-- Organization Selector strictly for Sys Admin -->
+        <div class="topbar-org-container" id="topbar-org-container" style="display: none; align-items: center; gap: 8px; margin-left: 12px;">
+          <label for="topbar-org-selector" style="font-size: 12px; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 6px; margin: 0; white-space: nowrap;">
+            <i class="fa-solid fa-building" style="color: #0070C0;"></i> Organization:
+          </label>
+          <select id="topbar-org-selector" class="topbar-org-select" onchange="onSwitchOrganization(this.value)" title="Filter view by Organization (Sys Admin)">
+            <option value="all">-- All Organizations (Master View) --</option>
+          </select>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="user-profile-badge" id="topbar-user-badge" style="display: flex; align-items: center; gap: 9px; padding: 4px 10px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px;">
+          <i class="fa-solid fa-circle-user" style="color: #0070C0; font-size: 18px;"></i>
+          <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.25;">
+            <span id="topbar-user-name" style="font-weight: 600; color: #1E293B; font-size: 12.5px;">Loading...</span>
+            <span id="topbar-user-org" style="font-size: 11px; color: #64748B; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+          </div>
+          <span class="excel-role-badge sys-admin" id="user-role-label"></span>
+        </div>
+
+        <button type="button" class="btn-topbar-logout" id="btn-topbar-logout" onclick="handleLogout()" title="Sign out of AED Remind">
+          <i class="fa-solid fa-arrow-right-from-bracket" style="margin-right: 5px;"></i> Log Out
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Title Banner (Row 2 in Excel: Royal Blue #0070C0) -->
+    <div class="page-title-banner" id="page-title-banner">
+      Dashboard
+    </div>
+
+    <div class="page-container">
+
+      <!-- ================================================================ -->
+      <!-- VIEW: DASHBOARD (Exact Excel Layout: 3 Stacked Overview Tables)  -->
+      <!-- ================================================================ -->
+      <section id="dashboard-view" class="view-section">
+        <!-- 4 KPI Cards (Exact Excel Screenshot Layout & Data) -->
+        <div class="excel-kpi-row">
+          <!-- Card 1: AEDs -->
+          <div class="excel-kpi-card">
+            <div class="excel-kpi-icon-tag"><i class="fa-solid fa-heart-pulse"></i></div>
+            <div class="excel-kpi-title">AEDs</div>
+            <div class="excel-kpi-stat-line">Total AEDs: <strong id="kpi-total-aeds">8</strong></div>
+            <div class="excel-kpi-stat-line">Warranty Expired: <strong id="kpi-warranty-expired">1</strong></div>
+          </div>
+
+          <!-- Card 2: PADs & Batteries -->
+          <div class="excel-kpi-card">
+            <div class="excel-kpi-icon-tag"><i class="fa-solid fa-battery-three-quarters"></i></div>
+            <div class="excel-kpi-title">PADs & Batteries</div>
+            <div class="excel-kpi-stat-line">Pads Expired: <strong id="kpi-pads-expired">1</strong></div>
+            <div class="excel-kpi-stat-line">Batteries Expired: <strong id="kpi-batteries-expired">0</strong></div>
+          </div>
+
+          <!-- Card 3: Inspections -->
+          <div class="excel-kpi-card">
+            <div class="excel-kpi-icon-tag"><i class="fa-solid fa-clipboard-check"></i></div>
+            <div class="excel-kpi-title">Inspections</div>
+            <div class="excel-kpi-stat-line">Failed: <strong id="kpi-inspections-failed">0</strong></div>
+            <div class="excel-kpi-stat-line">Overdue: <strong id="kpi-inspections-overdue">1</strong></div>
+          </div>
+
+          <!-- Card 4: CPR Classes -->
+          <div class="excel-kpi-card">
+            <div class="excel-kpi-icon-tag"><i class="fa-solid fa-certificate"></i></div>
+            <div class="excel-kpi-title">CPR Classes</div>
+            <div class="excel-kpi-stat-line">Certifications: <strong id="kpi-cpr-total">4</strong></div>
+            <div class="excel-kpi-stat-line">Expired: <strong id="kpi-cpr-expired">2</strong></div>
+          </div>
+        </div>
+
+        <!-- 1. Inspections Overview Table -->
+        <div class="section-subtitle-bar">
+          <span>Inspections overview</span>
+          <button class="btn-action" onclick="openRegisterInspectionForm()">
+            <i class="fa-solid fa-plus"></i> Register Inspection
+          </button>
+        </div>
+        <div class="excel-table-card">
+          <table class="excel-table">
+            <thead>
+              <tr>
+                <th style="width: 40px; text-align:center;">View</th>
+                <th>Location</th>
+                <th>Equipment</th>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>SKU</th>
+                <th>Serial Number</th>
+                <th>Inspection Date</th>
+                <th>Inspection Status</th>
+              </tr>
+            </thead>
+            <tbody id="dashboard-inspections-tbody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 2. Expiring Equipment Table -->
+        <div class="section-subtitle-bar">
+          <span>Expiring Equipment</span>
+          <button class="btn-action secondary" onclick="switchView('equipment')">
+            View All Equipment &rarr;
+          </button>
+        </div>
+        <div class="excel-table-card">
+          <table class="excel-table">
+            <thead>
+              <tr>
+                <th style="width: 40px; text-align:center;">View</th>
+                <th>Location</th>
+                <th>Equipment</th>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>SKU</th>
+                <th>Serial / Lot</th>
+                <th>Expiration Date</th>
+                <th>Service Status</th>
+              </tr>
+            </thead>
+            <tbody id="dashboard-equipment-tbody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 3. Expiring CPR Classes Table -->
+        <div class="section-subtitle-bar">
+          <span>Expiring CPR Classes</span>
+          <button class="btn-action secondary" onclick="switchView('cpr')">
+            View All CPR Classes &rarr;
+          </button>
+        </div>
+        <div class="excel-table-card">
+          <table class="excel-table">
+            <thead>
+              <tr>
+                <th style="width: 40px; text-align:center;">View</th>
+                <th>Location</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Class type</th>
+                <th>Accreditation</th>
+                <th>Expiration Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="dashboard-cpr-tbody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- VIEW: EQUIPMENT (Active & Archived)                               -->
+      <!-- ================================================================ -->
+      <section id="equipment-view" class="view-section" style="display:none;">
+        <!-- Excel Shape Buttons (+ Add AED, Spare, Archived) -->
+        <div class="excel-pill-btn-group">
+          <button class="excel-pill-btn" onclick="openAEDPanel()"><i class="fa-solid fa-plus"></i> Add AED</button>
+          <button class="excel-pill-btn" onclick="switchView('spare')"><i class="fa-solid fa-boxes-stacked"></i> Spare</button>
+          <button class="excel-pill-btn" id="btn-toggle-archived-eq"
+            onclick="toggleArchivedEquipment()"><i class="fa-solid fa-box-archive"></i> Archived</button>
+        </div>
+
+        <!-- Excel Search Function Row (☐ [Add search function]) -->
+        <div class="excel-equipment-search-row">
+          <div class="excel-search-box-wrap">
+            <span class="excel-checkbox-box"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <div class="excel-search-input-field">
+              <input type="text" id="equipment-search" placeholder="Search..." oninput="renderEquipment()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Report Action Toolbar (Screenshot 2) -->
+        <div class="report-action-toolbar" id="toolbar-equipment">
+          <button type="button" class="report-action-btn" id="btn-edit-equipment" onclick="handleReportAction('equipment', 'edit')"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+          <button type="button" class="report-action-btn" id="btn-duplicate-equipment" onclick="handleReportAction('equipment', 'duplicate')"><i class="fa-solid fa-copy"></i> Duplicate</button>
+          <button type="button" class="report-action-btn btn-delete-report" id="btn-delete-equipment" onclick="handleReportAction('equipment', 'delete')"><i class="fa-solid fa-trash-can"></i> Delete</button>
+          <button type="button" class="report-action-btn" onclick="handleReportAction('equipment', 'print')"><i class="fa-solid fa-print"></i> Print <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+          <div class="report-dropdown">
+            <button type="button" class="report-action-btn" onclick="toggleReportExportMenu('equipment')"><i class="fa-solid fa-file-export"></i> Export <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+            <div class="report-dropdown-menu" id="export-menu-equipment">
+              <a class="report-dropdown-item" onclick="handleReportAction('equipment', 'export-csv')"><i class="fa-solid fa-file-csv" style="margin-right:6px;"></i> Export as CSV</a>
+              <a class="report-dropdown-item" onclick="handleReportAction('equipment', 'export-excel')"><i class="fa-solid fa-file-excel" style="margin-right:6px;"></i> Export as Excel</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="excel-table-card">
+          <table class="excel-table">
+            <thead id="equipment-thead">
+              <tr>
+                <th class="report-checkbox-th"><i class="fa-regular fa-eye" style="color: #64748B; font-size:12px; margin-right:4px;"></i><input type="checkbox" class="report-header-checkbox" id="equipment-select-all" onchange="toggleReportSelectAll('equipment', this.checked)"></th>
+                <th style="width: 44px; text-align:center;">View</th>
+                <th>Location</th>
+                <th>Equipment</th>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>SKU</th>
+                <th>Serial / Lot</th>
+                <th>Expiration Date</th>
+                <th>Expiration Status</th>
+                <th>Service Status</th>
+                <th style="width: 55px; text-align:center;">Buy</th>
+              </tr>
+            </thead>
+            <tbody id="equipment-tbody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- VIEW: SPARE EQUIPMENT (Exact Excel Sheet 'Equipment - Spare')    -->
+      <!-- ================================================================ -->
+      <section id="spare-view" class="view-section" style="display:none;">
+        <!-- Excel Shape Buttons (Equipment, + Add AED, + Add Pads, + Add Batteries) -->
+        <div class="excel-pill-btn-group">
+          <button type="button" class="excel-pill-btn" onclick="switchView('equipment')">
+            <i class="fa-solid fa-heart-pulse" style="margin-right:7px; font-size:12px;"></i>Equipment
+          </button>
+          <button type="button" class="excel-pill-btn" onclick="openAddSpareAED()"><i class="fa-solid fa-plus"></i> Add AED</button>
+          <button type="button" class="excel-pill-btn" onclick="openAddSparePadModal()"><i class="fa-solid fa-plus"></i> Add Pads</button>
+          <button type="button" class="excel-pill-btn" onclick="openAddSpareBatteryModal()"><i class="fa-solid fa-plus"></i> Add Batteries</button>
+        </div>
+
+        <!-- Excel Search Function Row -->
+        <div class="excel-equipment-search-row">
+          <div class="excel-search-box-wrap">
+            <span class="excel-checkbox-box"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <div class="excel-search-input-field">
+              <input type="text" id="spare-search" placeholder="Search..." oninput="renderSpare()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Report Action Toolbar (Screenshot 2) -->
+        <div class="report-action-toolbar" id="toolbar-spare">
+          <button type="button" class="report-action-btn" id="btn-edit-spare" onclick="handleReportAction('spare', 'edit')"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+          <button type="button" class="report-action-btn" id="btn-duplicate-spare" onclick="handleReportAction('spare', 'duplicate')"><i class="fa-solid fa-copy"></i> Duplicate</button>
+          <button type="button" class="report-action-btn btn-delete-report" id="btn-delete-spare" onclick="handleReportAction('spare', 'delete')"><i class="fa-solid fa-trash-can"></i> Delete</button>
+          <button type="button" class="report-action-btn" onclick="handleReportAction('spare', 'print')"><i class="fa-solid fa-print"></i> Print <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+          <div class="report-dropdown">
+            <button type="button" class="report-action-btn" onclick="toggleReportExportMenu('spare')"><i class="fa-solid fa-file-export"></i> Export <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+            <div class="report-dropdown-menu" id="export-menu-spare">
+              <a class="report-dropdown-item" onclick="handleReportAction('spare', 'export-csv')"><i class="fa-solid fa-file-csv" style="margin-right:6px;"></i> Export as CSV</a>
+              <a class="report-dropdown-item" onclick="handleReportAction('spare', 'export-excel')"><i class="fa-solid fa-file-excel" style="margin-right:6px;"></i> Export as Excel</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="excel-table-card">
+          <table class="excel-table">
+            <thead>
+              <tr>
+                <th class="report-checkbox-th"><i class="fa-regular fa-eye" style="color: #64748B; font-size:12px; margin-right:4px;"></i><input type="checkbox" class="report-header-checkbox" id="spare-select-all" onchange="toggleReportSelectAll('spare', this.checked)"></th>
+                <th style="width: 44px; text-align:center;">View</th>
+                <th>Location</th>
+                <th>Equipment</th>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>SKU</th>
+                <th>Serial / Lot</th>
+                <th>Expiration Date</th>
+                <th>Expiration Status</th>
+              </tr>
+            </thead>
+            <tbody id="spare-tbody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- VIEW: INSPECTIONS (Active & Archived)                            -->
+      <!-- ================================================================ -->
+      <section id="inspections-view" class="view-section" style="display:none;">
+        <div class="search-action-row">
+          <div class="search-box-excel">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="inspections-search" placeholder="Search...">
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn-action secondary" id="btn-toggle-archived-insp" onclick="toggleArchivedInspections()">
+              <i class="fa-solid fa-archive"></i> Show Archived Inspections
+            </button>
+            <button class="btn-action" onclick="openRegisterInspectionForm()">
+              <i class="fa-solid fa-plus"></i> Register Inspection
+            </button>
+          </div>
+        </div>
+
+        <!-- Report Action Toolbar (Screenshot 2) -->
+        <div class="report-action-toolbar" id="toolbar-inspections">
+          <button type="button" class="report-action-btn" id="btn-edit-inspections" onclick="handleReportAction('inspections', 'edit')"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+          <button type="button" class="report-action-btn" id="btn-duplicate-inspections" onclick="handleReportAction('inspections', 'duplicate')"><i class="fa-solid fa-copy"></i> Duplicate</button>
+          <button type="button" class="report-action-btn btn-delete-report" id="btn-delete-inspections" onclick="handleReportAction('inspections', 'delete')"><i class="fa-solid fa-trash-can"></i> Delete</button>
+          <button type="button" class="report-action-btn" onclick="handleReportAction('inspections', 'print')"><i class="fa-solid fa-print"></i> Print <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+          <div class="report-dropdown">
+            <button type="button" class="report-action-btn" onclick="toggleReportExportMenu('inspections')"><i class="fa-solid fa-file-export"></i> Export <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+            <div class="report-dropdown-menu" id="export-menu-inspections">
+              <a class="report-dropdown-item" onclick="handleReportAction('inspections', 'export-csv')"><i class="fa-solid fa-file-csv" style="margin-right:6px;"></i> Export as CSV</a>
+              <a class="report-dropdown-item" onclick="handleReportAction('inspections', 'export-excel')"><i class="fa-solid fa-file-excel" style="margin-right:6px;"></i> Export as Excel</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="excel-table-card">
+          <table class="excel-table">
+            <thead>
+              <tr>
+                <th class="report-checkbox-th"><i class="fa-regular fa-eye" style="color: #64748B; font-size:12px; margin-right:4px;"></i><input type="checkbox" class="report-header-checkbox" id="inspections-select-all" onchange="toggleReportSelectAll('inspections', this.checked)"></th>
+                <th style="width: 40px; text-align:center;">View</th>
+                <th>Location</th>
+                <th>Equipment</th>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>SKU</th>
+                <th>Serial Number</th>
+                <th>Inspection Date</th>
+                <th>Inspection Status</th>
+                <th style="width: 60px; text-align:center;">Download</th>
+              </tr>
+            </thead>
+            <tbody id="inspections-tbody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- VIEW: RESCUE EVENTS (Exact Excel Sheets)                         -->
+      <!-- ================================================================ -->
+      <section id="rescue-view" class="view-section" style="display:none;">
+        <div class="search-action-row">
+          <div class="search-box-excel">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="rescue-search" placeholder="Search...">
+          </div>
+          <button class="btn-action" onclick="openUploadRescueModal()">
+            <i class="fa-solid fa-plus"></i> Register Rescue Event
+          </button>
+        </div>
+
+        <!-- Report Action Toolbar (Screenshot 2) -->
+        <div class="report-action-toolbar" id="toolbar-rescue">
+          <button type="button" class="report-action-btn" id="btn-edit-rescue" onclick="handleReportAction('rescue', 'edit')"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+          <button type="button" class="report-action-btn" id="btn-duplicate-rescue" onclick="handleReportAction('rescue', 'duplicate')"><i class="fa-solid fa-copy"></i> Duplicate</button>
+          <button type="button" class="report-action-btn btn-delete-report" id="btn-delete-rescue" onclick="handleReportAction('rescue', 'delete')"><i class="fa-solid fa-trash-can"></i> Delete</button>
+          <button type="button" class="report-action-btn" onclick="handleReportAction('rescue', 'print')"><i class="fa-solid fa-print"></i> Print <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+          <div class="report-dropdown">
+            <button type="button" class="report-action-btn" onclick="toggleReportExportMenu('rescue')"><i class="fa-solid fa-file-export"></i> Export <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+            <div class="report-dropdown-menu" id="export-menu-rescue">
+              <a class="report-dropdown-item" onclick="handleReportAction('rescue', 'export-csv')"><i class="fa-solid fa-file-csv" style="margin-right:6px;"></i> Export as CSV</a>
+              <a class="report-dropdown-item" onclick="handleReportAction('rescue', 'export-excel')"><i class="fa-solid fa-file-excel" style="margin-right:6px;"></i> Export as Excel</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="excel-table-card">
+          <table class="excel-table">
+            <thead>
+              <tr>
+                <th class="report-checkbox-th"><i class="fa-regular fa-eye" style="color: #64748B; font-size:12px; margin-right:4px;"></i><input type="checkbox" class="report-header-checkbox" id="rescue-select-all" onchange="toggleReportSelectAll('rescue', this.checked)"></th>
+                <th>Location</th>
+                <th>Equipment</th>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>SKU</th>
+                <th>Serial Number</th>
+                <th>Event Date</th>
+                <th style="width: 70px; text-align:center;">Download</th>
+              </tr>
+            </thead>
+            <tbody id="rescue-tbody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- VIEW: CPR CERTIFICATION                                          -->
+      <!-- ================================================================ -->
+      <section id="cpr-view" class="view-section" style="display:none;">
+        <!-- 1. CPR Table / List View -->
+        <div id="cpr-list-container">
+          <div class="search-action-row">
+            <div class="search-box-excel">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="cpr-search" placeholder="Search...">
+            </div>
+            <button class="btn-action" id="btn-add-cpr" onclick="openAddCPRForm()">
+              <i class="fa-solid fa-plus"></i> Add CPR Certification
+            </button>
+          </div>
+
+          <!-- Report Action Toolbar (Screenshot 2) -->
+          <div class="report-action-toolbar" id="toolbar-cpr">
+            <button type="button" class="report-action-btn" id="btn-edit-cpr" onclick="handleReportAction('cpr', 'edit')"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+            <button type="button" class="report-action-btn" id="btn-duplicate-cpr" onclick="handleReportAction('cpr', 'duplicate')"><i class="fa-solid fa-copy"></i> Duplicate</button>
+            <button type="button" class="report-action-btn btn-delete-report" id="btn-delete-cpr" onclick="handleReportAction('cpr', 'delete')"><i class="fa-solid fa-trash-can"></i> Delete</button>
+            <button type="button" class="report-action-btn" onclick="handleReportAction('cpr', 'print')"><i class="fa-solid fa-print"></i> Print <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+            <div class="report-dropdown">
+              <button type="button" class="report-action-btn" onclick="toggleReportExportMenu('cpr')"><i class="fa-solid fa-file-export"></i> Export <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+              <div class="report-dropdown-menu" id="export-menu-cpr">
+                <a class="report-dropdown-item" onclick="handleReportAction('cpr', 'export-csv')"><i class="fa-solid fa-file-csv" style="margin-right:6px;"></i> Export as CSV</a>
+                <a class="report-dropdown-item" onclick="handleReportAction('cpr', 'export-excel')"><i class="fa-solid fa-file-excel" style="margin-right:6px;"></i> Export as Excel</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="excel-table-card">
+            <table class="excel-table">
+              <thead>
+                <tr>
+                  <th class="report-checkbox-th"><i class="fa-regular fa-eye" style="color: #64748B; font-size:12px; margin-right:4px;"></i><input type="checkbox" class="report-header-checkbox" id="cpr-select-all" onchange="toggleReportSelectAll('cpr', this.checked)"></th>
+                  <th style="width: 40px; text-align:center;">View</th>
+                  <th>Location</th>
+                  <th>First Name</th>
+                  <th>Last Name</th>
+                  <th>Class type</th>
+                  <th>Accreditation</th>
+                  <th>Expiration Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="cpr-tbody">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 2. CPR Form View (Exact 1:1 Excel System Map - Screenshot 1) -->
+        <div id="cpr-form-container" style="display:none;">
+          <!-- Header Banner with Back Button (Screenshot 1) -->
+          <div class="aed-panel-banner">
+            <span>CPR Class Certification</span>
+            <div class="banner-btn-group">
+              <button type="button" class="excel-pill-btn sm back" onclick="closeCPRForm()">Back</button>
+            </div>
+          </div>
+
+          <!-- 2-Column Form Card (Screenshot 1) -->
+          <div class="excel-form-2col-card">
+            <div class="excel-form-2col">
+              <!-- Row 1: Location (dropdown)* | (empty) -->
+              <div class="excel-form-cell">
+                <label for="cpr-form-loc">Location (dropdown)*</label>
+                <select id="cpr-form-loc" class="excel-form-input">
+                  <!-- Rendered via JS -->
+                </select>
+              </div>
+              <div class="excel-form-cell">
+                <!-- Empty right cell for 1:1 grid alignment -->
+              </div>
+
+              <!-- Row 2: Select Class type (dropdown)* | Accreditation type* -->
+              <div class="excel-form-cell">
+                <label for="cpr-form-class-type">Select Class type (dropdown)*</label>
+                <select id="cpr-form-class-type" class="excel-form-input">
+                  <option value="" selected>-Select Class Type-</option>
+                  <option value="CPR/AED/FA">CPR/AED/FA</option>
+                  <option value="CPR/AED">CPR/AED</option>
+                  <option value="First Aid">First Aid</option>
+                  <option value="BLS/FA">BLS/FA</option>
+                  <option value="BBP">BBP</option>
+                  <option value="Adult & Pediatric CPR/AED">Adult & Pediatric CPR/AED</option>
+                  <option value="BLS Healthcare Provider">BLS Healthcare Provider</option>
+                </select>
+              </div>
+              <div class="excel-form-cell">
+                <label for="cpr-form-accred">Accreditation type*</label>
+                <select id="cpr-form-accred" class="excel-form-input">
+                  <option value="" selected>-Select Accreditation-</option>
+                  <option value="AHA">AHA</option>
+                  <option value="American Red Cross">American Red Cross</option>
+                  <option value="HSI">HSI</option>
+                  <option value="NSC">NSC</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <!-- Row 3: Participant First Name* | Participant Last Name* -->
+              <div class="excel-form-cell">
+                <label for="cpr-form-first-name">Participant First Name*</label>
+                <input type="text" id="cpr-form-first-name" class="excel-form-input" placeholder="First Name">
+              </div>
+              <div class="excel-form-cell">
+                <label for="cpr-form-last-name">Participant Last Name*</label>
+                <input type="text" id="cpr-form-last-name" class="excel-form-input" placeholder="Last Name">
+              </div>
+
+              <!-- Row 4: Participant Email* | Participant Phone number* -->
+              <div class="excel-form-cell">
+                <label for="cpr-form-email">Participant Email*</label>
+                <input type="email" id="cpr-form-email" class="excel-form-input" placeholder="participant@example.com">
+              </div>
+              <div class="excel-form-cell">
+                <label for="cpr-form-phone">Participant Phone number*</label>
+                <input type="tel" id="cpr-form-phone" class="excel-form-input" placeholder="(555) 000-0000">
+              </div>
+
+              <!-- Row 5: Class Date* | Expiration Date (auto calculated to 2 years validity) -->
+              <div class="excel-form-cell">
+                <label for="cpr-form-class-date">Class Date*</label>
+                <input type="date" id="cpr-form-class-date" class="excel-form-input" onchange="onCPRClassDateChange()">
+              </div>
+              <div class="excel-form-cell">
+                <label for="cpr-form-exp-date">Expiration Date</label>
+                <input type="date" id="cpr-form-exp-date" class="excel-form-input">
+              </div>
+            </div>
+
+            <!-- Row 6: Save | Cancel | Delete buttons (Screenshot 1) -->
+            <div class="excel-form-actions" style="justify-content: flex-start; gap: 10px; margin-top: 24px;">
+              <button type="button" class="excel-pill-btn" onclick="saveCPRForm()">Save</button>
+              <button type="button" class="excel-pill-btn" style="background:#475569;" onclick="closeCPRForm()">Cancel</button>
+              <button type="button" class="excel-pill-btn" id="btn-delete-cpr-form" style="background:#DC2626;" onclick="deleteCPRForm()">Delete</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- VIEW: LOCATIONS                                                  -->
+      <!-- ================================================================ -->
+      <section id="locations-view" class="view-section" style="display:none;">
+        <!-- 1. Locations Table / List View -->
+        <div id="locations-list-container">
+          <div class="search-action-row">
+            <div class="search-box-excel">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="locations-search" placeholder="Search...">
+            </div>
+            <button class="btn-action" id="btn-add-location" onclick="openAddLocationForm()">
+              <i class="fa-solid fa-plus"></i> Add Location
+            </button>
+          </div>
+
+          <!-- Report Action Toolbar (Screenshot 2) -->
+          <div class="report-action-toolbar" id="toolbar-locations">
+            <button type="button" class="report-action-btn" id="btn-edit-locations" onclick="handleReportAction('locations', 'edit')"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+            <button type="button" class="report-action-btn" id="btn-duplicate-locations" onclick="handleReportAction('locations', 'duplicate')"><i class="fa-solid fa-copy"></i> Duplicate</button>
+            <button type="button" class="report-action-btn btn-delete-report" id="btn-delete-locations" onclick="handleReportAction('locations', 'delete')"><i class="fa-solid fa-trash-can"></i> Delete</button>
+            <button type="button" class="report-action-btn" onclick="handleReportAction('locations', 'print')"><i class="fa-solid fa-print"></i> Print <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+            <div class="report-dropdown">
+              <button type="button" class="report-action-btn" onclick="toggleReportExportMenu('locations')"><i class="fa-solid fa-file-export"></i> Export <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+              <div class="report-dropdown-menu" id="export-menu-locations">
+                <a class="report-dropdown-item" onclick="handleReportAction('locations', 'export-csv')"><i class="fa-solid fa-file-csv" style="margin-right:6px;"></i> Export as CSV</a>
+                <a class="report-dropdown-item" onclick="handleReportAction('locations', 'export-excel')"><i class="fa-solid fa-file-excel" style="margin-right:6px;"></i> Export as Excel</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="excel-table-card">
+            <table class="excel-table">
+              <thead>
+                <tr>
+                  <th class="report-checkbox-th"><i class="fa-regular fa-eye" style="color: #64748B; font-size:12px; margin-right:4px;"></i><input type="checkbox" class="report-header-checkbox" id="locations-select-all" onchange="toggleReportSelectAll('locations', this.checked)"></th>
+                  <th style="width: 40px; text-align:center;">View</th>
+                  <th>Location Name</th>
+                  <th>Phone number</th>
+                  <th>Street Address</th>
+                  <th>Suite / Unit / Floor</th>
+                  <th>City</th>
+                  <th>State</th>
+                  <th>Contact Name</th>
+                </tr>
+              </thead>
+              <tbody id="locations-tbody">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 2. Location Form View (Exact 1:1 Excel System Map - Screenshot) -->
+        <div id="locations-form-container" style="display:none;">
+          <!-- Header Banner with Back Button (Navy Blue) -->
+          <div class="aed-panel-banner">
+            <span>Location Information</span>
+            <div class="banner-btn-group">
+              <button type="button" class="excel-pill-btn sm back" onclick="closeLocationForm()">Back</button>
+            </div>
+          </div>
+
+          <!-- 2-Column Form Card (Screenshot Layout) -->
+          <div class="excel-form-2col-card">
+            <div class="excel-form-2col">
+              <!-- Row 1: Location Name* | [Same as organization address checkmark option to auto complete the fields] -->
+              <div class="excel-form-cell">
+                <label for="loc-form-name">Location Name*</label>
+                <input type="text" id="loc-form-name" class="excel-form-input" placeholder="Location Name">
+              </div>
+              <div class="excel-form-cell" style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+                <label class="excel-checkbox-label" style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #1E293B; font-weight: 500;">
+                  <input type="checkbox" id="loc-chk-same-org" onchange="onSameAsOrgAddressChange()" style="accent-color: #0070C0; width: 16px; height: 16px; cursor: pointer;">
+                  <span>Same as organization address</span>
+                </label>
+              </div>
+
+              <!-- Row 2: Phone number* | Street Address* -->
+              <div class="excel-form-cell">
+                <label for="loc-form-phone">Phone number*</label>
+                <input type="tel" id="loc-form-phone" class="excel-form-input" placeholder="(555) 000-0000" oninput="onLocationPhoneInput()">
+              </div>
+              <div class="excel-form-cell">
+                <label for="loc-form-street">Street Address*</label>
+                <input type="text" id="loc-form-street" class="excel-form-input" placeholder="Street Address">
+              </div>
+
+              <!-- Row 3: Suite / Unit / Floor | City* -->
+              <div class="excel-form-cell">
+                <label for="loc-form-suite">Suite / Unit / Floor</label>
+                <input type="text" id="loc-form-suite" class="excel-form-input" placeholder="Suite / Unit / Floor">
+              </div>
+              <div class="excel-form-cell">
+                <label for="loc-form-city">City*</label>
+                <input type="text" id="loc-form-city" class="excel-form-input" placeholder="City">
+              </div>
+
+              <!-- Row 4: State* | ZIP Code* -->
+              <div class="excel-form-cell">
+                <label for="loc-form-state">State*</label>
+                <input type="text" id="loc-form-state" class="excel-form-input" placeholder="State">
+              </div>
+              <div class="excel-form-cell">
+                <label for="loc-form-zip">ZIP Code*</label>
+                <input type="text" id="loc-form-zip" class="excel-form-input" placeholder="ZIP Code">
+              </div>
+
+              <!-- Section 2: Location Contact | [same as user info checkmark option] -->
+              <div class="excel-form-cell" style="margin-top: 14px; border-top: 1px solid #CBD5E1; padding-top: 14px;">
+                <label style="font-size: 14px; font-weight: 700; color: #004182;">Location Contact</label>
+              </div>
+              <div class="excel-form-cell" style="margin-top: 14px; border-top: 1px solid #CBD5E1; padding-top: 14px; display: flex; align-items: flex-end; padding-bottom: 8px;">
+                <label class="excel-checkbox-label" style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #1E293B; font-weight: 500;">
+                  <input type="checkbox" id="loc-chk-same-user" onchange="onSameAsUserInfoChange()" style="accent-color: #0070C0; width: 16px; height: 16px; cursor: pointer;">
+                  <span>Same as user info</span>
+                </label>
+              </div>
+
+              <!-- Row 6: First Name* | Last Name* -->
+              <div class="excel-form-cell">
+                <label for="loc-form-contact-first">First Name*</label>
+                <input type="text" id="loc-form-contact-first" class="excel-form-input" placeholder="First Name">
+              </div>
+              <div class="excel-form-cell">
+                <label for="loc-form-contact-last">Last Name*</label>
+                <input type="text" id="loc-form-contact-last" class="excel-form-input" placeholder="Last Name">
+              </div>
+
+              <!-- Row 7: Email Address* | Phone number * [Same as Location's phone checkmark option] -->
+              <div class="excel-form-cell">
+                <label for="loc-form-contact-email">Email Address*</label>
+                <input type="email" id="loc-form-contact-email" class="excel-form-input" placeholder="contact@example.com">
+              </div>
+              <div class="excel-form-cell">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                  <label for="loc-form-contact-phone" style="margin: 0;">Phone number*</label>
+                  <label class="excel-checkbox-label" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: #475569; font-weight: normal;">
+                    <input type="checkbox" id="loc-chk-same-phone" onchange="onSameAsLocationPhoneChange()" style="accent-color: #0070C0; width: 14px; height: 14px; cursor: pointer;">
+                    <span>Same as Location's phone</span>
+                  </label>
+                </div>
+                <input type="tel" id="loc-form-contact-phone" class="excel-form-input" placeholder="(555) 000-0000">
+              </div>
+            </div>
+
+            <!-- Row 8: Save | Cancel | Delete buttons -->
+            <div class="excel-form-actions" style="justify-content: flex-start; gap: 10px; margin-top: 24px;">
+              <button type="button" class="excel-pill-btn" onclick="saveLocationForm()">Save</button>
+              <button type="button" class="excel-pill-btn" style="background:#475569;" onclick="closeLocationForm()">Cancel</button>
+              <button type="button" class="excel-pill-btn" id="btn-delete-location-form" style="background:#DC2626;" onclick="deleteLocationForm()">Delete</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- VIEW: USERS & ACCOUNT                                            -->
+      <!-- ================================================================ -->
+      <section id="users-view" class="view-section" style="display:none;">
+        <!-- User / Organization Toggle Buttons -->
+        <div class="pad-category-toggle-container" style="border-radius: 4px; margin-bottom: 16px;">
+          <button type="button" class="pad-category-btn active" id="btn-user-toggle-roster" onclick="switchUserModuleTab('roster')"><i class="fa-solid fa-users" style="margin-right:6px;"></i> Users Roster</button>
+          <button type="button" class="pad-category-btn" id="btn-user-toggle-user" onclick="switchUserModuleTab('user')"><i class="fa-solid fa-user" style="margin-right:6px;"></i> My Profile</button>
+          <button type="button" class="pad-category-btn" id="btn-user-toggle-org" onclick="switchUserModuleTab('organization')"><i class="fa-solid fa-building" style="margin-right:6px;"></i> Organization</button>
+        </div>
+
+        <!-- 1. Users Roster & Invitation Management (Screenshot 1 Access System) -->
+        <div id="user-tab-roster-container">
+          <div class="section-subtitle-bar">
+            <span>Authorized Users & Portal Access</span>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn-action secondary" onclick="switchUserModuleTab('organization'); openAddOrgModal();" title="Add Organization">
+                <i class="fa-solid fa-building"></i> Add Organization
+              </button>
+              <button type="button" class="btn-action" id="btn-open-invite-user" onclick="openInviteUserModal()">
+                <i class="fa-solid fa-user-plus"></i> + Invite New User
+              </button>
+            </div>
+          </div>
+
+          <!-- Report Action Toolbar (Screenshot 2) -->
+          <div class="report-action-toolbar" id="toolbar-users">
+            <button type="button" class="report-action-btn" id="btn-edit-users" onclick="handleReportAction('users', 'edit')"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+            <button type="button" class="report-action-btn" id="btn-duplicate-users" onclick="handleReportAction('users', 'duplicate')"><i class="fa-solid fa-copy"></i> Duplicate</button>
+            <button type="button" class="report-action-btn btn-delete-report" id="btn-delete-users" onclick="handleReportAction('users', 'delete')"><i class="fa-solid fa-trash-can"></i> Delete</button>
+            <button type="button" class="report-action-btn" onclick="handleReportAction('users', 'print')"><i class="fa-solid fa-print"></i> Print <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+            <div class="report-dropdown">
+              <button type="button" class="report-action-btn" onclick="toggleReportExportMenu('users')"><i class="fa-solid fa-file-export"></i> Export <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+              <div class="report-dropdown-menu" id="export-menu-users">
+                <a class="report-dropdown-item" onclick="handleReportAction('users', 'export-csv')"><i class="fa-solid fa-file-csv" style="margin-right:6px;"></i> Export as CSV</a>
+                <a class="report-dropdown-item" onclick="handleReportAction('users', 'export-excel')"><i class="fa-solid fa-file-excel" style="margin-right:6px;"></i> Export as Excel</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="excel-table-card">
+            <table class="excel-table">
+              <thead>
+                <tr>
+                  <th class="report-checkbox-th"><i class="fa-regular fa-eye" style="color: #64748B; font-size:12px; margin-right:4px;"></i><input type="checkbox" class="report-header-checkbox" id="users-select-all" onchange="toggleReportSelectAll('users', this.checked)"></th>
+                  <th>User</th>
+                  <th>Email Address</th>
+                  <th>Phone Number</th>
+                  <th>Role</th>
+                  <th>Location Scope</th>
+                  <th>Access Status</th>
+                  <th style="text-align:center; width: 140px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-roster-tbody">
+                <!-- Populated via JS renderUsersRoster() -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 2. User Information Form -->
+        <div id="user-tab-user-container" style="display:none;">
+          <div class="user-info-form-card" style="margin-bottom: 24px;">
+            <div class="user-info-form-header">
+              <h3>User Information</h3>
+            </div>
+            <div class="user-info-form-grid">
+              <div class="user-form-field">
+                <label>Organizations</label>
+                <div class="user-form-select-wrap">
+                  <select id="user-profile-org" class="user-form-control">
+                    <option value="">-Select-</option>
+                  </select>
+                </div>
+              </div>
+              <div class="user-form-field">
+                <label>Role</label>
+                <div class="user-form-select-wrap">
+                  <select id="user-profile-role" class="user-form-control" disabled>
+                    <option value="">-Select-</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="user-form-field">
+                <label>First Name <span class="required-star">*</span></label>
+                <input type="text" id="user-first-name" class="user-form-control" placeholder="">
+              </div>
+              <div class="user-form-field">
+                <label>Last Name <span class="required-star">*</span></label>
+                <input type="text" id="user-last-name" class="user-form-control" placeholder="">
+              </div>
+
+              <div class="user-form-field">
+                <label>Email <span class="required-star">*</span></label>
+                <input type="email" id="user-email" class="user-form-control" placeholder="">
+              </div>
+              <div class="user-form-field">
+                <label>Phone Number <span class="required-star">*</span></label>
+                <div class="phone-input-group">
+                  <span class="phone-prefix"><span class="flag-icon">🇺🇸</span> +1</span>
+                  <input type="tel" id="user-phone" class="phone-number-field" placeholder="201-555-0123">
+                </div>
+              </div>
+            </div>
+            <div class="user-info-form-actions">
+              <button class="btn-action secondary" onclick="switchUserModuleTab('roster')">Cancel</button>
+              <button class="btn-action" onclick="saveUserProfile()"><i class="fa-solid fa-check" style="margin-right:6px;"></i> Save User Profile</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Dedicated Organization Report (Screenshot 2 Requirement) -->
+        <div id="user-tab-org-container" style="display:none;">
+          <div class="section-subtitle-bar">
+            <span>Registered Organizations & Accounts</span>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn-action secondary" onclick="redirectToUserRoster()" title="Add User to an Organization">
+                <i class="fa-solid fa-user-plus"></i> + Add User
+              </button>
+              <button type="button" class="btn-action" onclick="openAddOrgModal()">
+                <i class="fa-solid fa-plus"></i> Add Organization
+              </button>
+            </div>
+          </div>
+
+          <!-- Report Action Toolbar for Organizations -->
+          <div class="report-action-toolbar" id="toolbar-organizations">
+            <button type="button" class="report-action-btn" id="btn-edit-organizations" onclick="handleReportAction('organizations', 'edit')"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+            <button type="button" class="report-action-btn" id="btn-duplicate-organizations" onclick="handleReportAction('organizations', 'duplicate')"><i class="fa-solid fa-copy"></i> Duplicate</button>
+            <button type="button" class="report-action-btn btn-delete-report" id="btn-delete-organizations" onclick="handleReportAction('organizations', 'delete')"><i class="fa-solid fa-trash-can"></i> Delete</button>
+            <button type="button" class="report-action-btn" onclick="handleReportAction('organizations', 'print')"><i class="fa-solid fa-print"></i> Print <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+            <div class="report-dropdown">
+              <button type="button" class="report-action-btn" onclick="toggleReportExportMenu('organizations')"><i class="fa-solid fa-file-export"></i> Export <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+              <div class="report-dropdown-menu" id="export-menu-organizations">
+                <a class="report-dropdown-item" onclick="handleReportAction('organizations', 'export-csv')"><i class="fa-solid fa-file-csv" style="margin-right:6px;"></i> Export as CSV</a>
+                <a class="report-dropdown-item" onclick="handleReportAction('organizations', 'export-excel')"><i class="fa-solid fa-file-excel" style="margin-right:6px;"></i> Export as Excel</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="excel-table-card">
+            <table class="excel-table">
+              <thead>
+                <tr>
+                  <th class="report-checkbox-th"><i class="fa-regular fa-eye" style="color: #64748B; font-size:12px; margin-right:4px;"></i><input type="checkbox" class="report-header-checkbox" id="organizations-select-all" onchange="toggleReportSelectAll('organizations', this.checked)"></th>
+                  <th>Organization Name</th>
+                  <th>Phone Number</th>
+                  <th>Location / Address</th>
+                  <th>Website</th>
+                  <th>Account Type</th>
+                  <th style="text-align:center;">Assigned Users</th>
+                  <th>Status</th>
+                  <th style="text-align:center; width: 140px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="organizations-roster-tbody">
+                <!-- Populated via JS renderOrganizationsRoster() -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Customer (No Portal Access) Special View -->
+      <section id="customer-no-portal-view" class="view-section" style="display:none;">
+        <div class="customer-portal-lock">
+          <div class="customer-portal-lock-icon">
+            <i class="fa-solid fa-envelope-circle-check"></i>
+          </div>
+          <h3>Customer Account Active — Email Reminders Only</h3>
+          <p>
+            Per the AED Remind Security & Role-Based Access policy, <strong>Customer accounts do not have interactive portal login credentials</strong>.
+            Instead, this account automatically receives direct compliance reminder emails to ensure safety equipment readiness.
+          </p>
+
+          <div class="customer-reminders-box">
+            <h4><i class="fa-solid fa-clock-rotate-left"></i> Scheduled Automated Expiration Reminders:</h4>
+            <ul>
+              <li><strong>AED Expiration Reminders:</strong> Dispatched 90, 60, 30, and 7 days prior to warranty expiration</li>
+              <li><strong>Pads & Batteries Reminders:</strong> Dispatched 90, 60, 30, and 7 days prior to component expiration</li>
+              <li><strong>Critical Failure Notifications:</strong> Real-time escalation for any deficient inspection</li>
+            </ul>
+          </div>
+
+          <div style="margin-top: 24px;">
+            <button class="excel-pill-btn" onclick="switchRole('Admin (Account owner)')">
+              <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i> Return to Admin (Account Owner) View
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- VIEW: AED PANEL (Exact 1:1 Excel Sheet 'AED Panel' & Sub-panels) -->
+      <!-- ================================================================ -->
+      <section id="aed-panel-view" class="view-section" style="display:none;">
+        <!-- Top Pill Navigation Tabs (Screenshots 1-5) -->
+        <div class="aed-panel-tabs">
+          <button type="button" class="aed-panel-tab-btn equipment-nav-btn" onclick="switchView('equipment')">
+            <i class="fa-solid fa-arrow-left"></i> Equipment
+          </button>
+          <button type="button" class="aed-panel-tab-btn active" id="btn-tab-aed"
+            onclick="switchAEDPanelTab('aed')">AED</button>
+          <button type="button" class="aed-panel-tab-btn" id="btn-tab-pads"
+            onclick="switchAEDPanelTab('pads')">Pads</button>
+          <button type="button" class="aed-panel-tab-btn" id="btn-tab-batteries"
+            onclick="switchAEDPanelTab('batteries')">Batteries</button>
+          <button type="button" class="aed-panel-tab-btn" id="btn-tab-inspections"
+            onclick="switchAEDPanelTab('inspections')">Inspections</button>
+          <button type="button" class="aed-panel-tab-btn" id="btn-tab-rescue"
+            onclick="switchAEDPanelTab('rescue')">Rescue Events</button>
+          <button type="button" class="aed-panel-tab-btn" id="btn-tab-system-log"
+            onclick="switchAEDPanelTab('system-log')">System Log</button>
+        </div>
+
+        <!-- 1. TAB: AED Information (Screenshot 1) -->
+        <div id="subtab-aed" class="aed-subtab-pane">
+          <div class="aed-panel-banner">
+            <span>AED Information</span>
+            <div class="banner-btn-group">
+              <button type="button" class="excel-pill-btn sm" id="btn-select-spare-aed" onclick="openSelectSpareAEDModal()">
+                <i class="fa-solid fa-boxes-stacked" style="margin-right:4px;"></i> Select from Spare
+              </button>
+            </div>
+          </div>
+
+          <div class="excel-form-2col-card">
+            <div class="excel-form-2col">
+              <!-- Left Column -->
+              <div class="excel-form-cell">
+                <label>Location</label>
+                <select id="aed-info-location" class="excel-form-input" onchange="onAEDLocationChange()">
+                  <!-- Populated dynamically -->
+                </select>
+              </div>
+
+              <!-- Right Column -->
+              <div class="excel-form-cell">
+                <label>AED Placement</label>
+                <input type="text" id="aed-info-placement" class="excel-form-input"
+                  placeholder="e.g. Floor 1 Lobby East Wall">
+              </div>
+
+              <!-- Left Column -->
+              <div class="excel-form-cell">
+                <label>AED Brand*</label>
+                <select id="aed-info-brand" class="excel-form-input" onchange="onAEDBrandChange()">
+                  <option value="">Select Brand</option>
+                  <option value="ZOLL">ZOLL</option>
+                  <option value="Philips">Philips</option>
+                  <option value="Cardiac Science">Cardiac Science</option>
+                  <option value="Defibtech">Defibtech</option>
+                  <option value="Physio-Control">Physio-Control</option>
+                  <option value="Heartsine">Heartsine</option>
+                </select>
+              </div>
+
+              <!-- Right Column -->
+              <div class="excel-form-cell">
+                <label>AED Model*</label>
+                <select id="aed-info-model" class="excel-form-input" onchange="onAEDModelChange()">
+                  <option value="">Select Brand First</option>
+                </select>
+              </div>
+
+              <!-- Left Column -->
+              <div class="excel-form-cell">
+                <label>SKU</label>
+                <input type="text" id="aed-info-sku" class="excel-form-input" placeholder="e.g. ZOL-AED3-01">
+              </div>
+
+              <!-- Right Column -->
+              <div class="excel-form-cell">
+                <label>Serial Number*</label>
+                <input type="text" id="aed-info-serial" class="excel-form-input" placeholder="e.g. Z3-8921004">
+              </div>
+
+              <!-- Left Column -->
+              <div class="excel-form-cell">
+                <label>Purchase Date*</label>
+                <input type="date" id="aed-info-purchase-date" class="excel-form-input" onchange="onAEDPurchaseDateChange()">
+              </div>
+
+              <!-- Right Column -->
+              <div class="excel-form-cell">
+                <label>Registered with Manufacturer for Warranty*</label>
+                <select id="aed-info-registered" class="excel-form-input">
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+
+              <!-- Left Column -->
+              <div class="excel-form-cell">
+                <label>Warranty Expiration Date*</label>
+                <input type="date" id="aed-info-warranty-date" class="excel-form-input"
+                  onchange="calculateWarrantyStatus()">
+              </div>
+
+              <!-- Right Column -->
+              <div class="excel-form-cell">
+                <label>Warranty Status</label>
+                <input type="text" id="aed-info-warranty-status" class="excel-form-input" readonly value="Ok">
+              </div>
+
+              <!-- Left Column -->
+              <div class="excel-form-cell">
+                <label>Notes</label>
+                <textarea id="aed-info-notes" class="excel-form-input" rows="3"
+                  placeholder="Enter device notes..."></textarea>
+              </div>
+
+              <!-- Right Column -->
+              <div class="excel-form-cell">
+                <label>Inventory Status</label>
+                <select id="aed-info-inventory-status" class="excel-form-input" onchange="onAEDInventoryStatusChange()">
+                  <option value="active">Active</option>
+                  <option value="spare">Spare</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="excel-form-actions">
+              <button type="button" id="btn-edit-aed-info" class="excel-pill-btn" style="background:#0284C7; display:none;" onclick="enableAEDEditMode()"><i class="fa-solid fa-pen-to-square" style="margin-right:6px;"></i>Edit AED Information</button>
+              <button type="button" id="btn-save-aed-info" class="excel-pill-btn" onclick="saveAEDInformation()">Save AED Information</button>
+              <button type="button" class="excel-pill-btn" style="background:#475569;"
+                onclick="switchView('equipment')">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. TAB: AED Pads (Screenshot 2 & Pad Information Form) -->
+        <div id="subtab-pads" class="aed-subtab-pane" style="display:none;">
+          <!-- 2A: Table View (Screenshot 2) -->
+          <div id="pad-list-container">
+            <div class="aed-panel-banner">
+              <span id="pad-list-banner-title">AED Pads</span>
+              <div class="banner-btn-group">
+                <button type="button" class="excel-pill-btn sm" onclick="openPadForm()">+ Add Pad</button>
+                <button type="button" class="excel-pill-btn sm" id="btn-toggle-archived-pads"
+                  onclick="toggleArchivedPads()">Archived</button>
+              </div>
+            </div>
+
+
+            <div class="excel-table-card">
+              <table class="excel-table ice-blue-header">
+                <thead>
+                  <tr>
+                    <th style="width: 44px; text-align:center;">View</th>
+                    <th>Brand</th>
+                    <th>Model</th>
+                    <th>SKU</th>
+                    <th>Lot</th>
+                    <th>Expiration Date</th>
+                    <th>Expiration Status</th>
+                  </tr>
+                </thead>
+                <tbody id="panel-pads-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 2B: Pad Information Form View (New Screenshot) -->
+          <div id="pad-form-container" style="display:none;">
+            <div class="aed-panel-banner">
+              <span>Pad information</span>
+              <div class="banner-btn-group">
+                <button type="button" class="excel-pill-btn sm" onclick="openSelectSparePadModal()">Select from
+                  Spare</button>
+                <button type="button" class="excel-pill-btn sm" onclick="toggleArchivedPads()">Archived</button>
+              </div>
+            </div>
+
+
+            <div class="excel-form-2col-card">
+              <div class="excel-form-2col">
+                <!-- Row 1: Left = Location, Right = Brand* -->
+                <div class="excel-form-cell">
+                  <label>Location</label>
+                  <input type="text" id="pad-info-location" class="excel-form-input" readonly>
+                </div>
+                <div class="excel-form-cell">
+                  <label>Brand*</label>
+                  <select id="pad-info-brand" class="excel-form-input" onchange="onPadBrandChange()">
+                    <option value="" selected>-Select Brand-</option>
+                    <option value="ZOLL">ZOLL</option>
+                    <option value="Philips">Philips</option>
+                    <option value="Cardiac Science">Cardiac Science</option>
+                    <option value="Defibtech">Defibtech</option>
+                    <option value="Physio-Control">Physio-Control</option>
+                    <option value="Heartsine">Heartsine</option>
+                  </select>
+                </div>
+
+                <!-- Row 2: Left = Model*, Right = SKU -->
+                <div class="excel-form-cell">
+                  <label>Model*</label>
+                  <select id="pad-info-model" class="excel-form-input" onchange="onPadModelChange()">
+                    <option value="" selected>-Select Model-</option>
+                    <!-- Populated dynamically -->
+                  </select>
+                </div>
+                <div class="excel-form-cell">
+                  <label>SKU</label>
+                  <input type="text" id="pad-info-sku" class="excel-form-input" placeholder="e.g. 8900-0800-01">
+                </div>
+
+                <!-- Row 3: Left = Lot number, Right = Expiration Date* -->
+                <div class="excel-form-cell">
+                  <label>Lot number</label>
+                  <input type="text" id="pad-info-lot" class="excel-form-input" placeholder="Enter lot number">
+                </div>
+                <div class="excel-form-cell">
+                  <label>Expiration Date*</label>
+                  <input type="date" id="pad-info-exp-date" class="excel-form-input"
+                    onchange="calculatePadExpirationStatus()">
+                </div>
+
+                <!-- Row 4: Left = Expiration Status, Right = Inventory Status -->
+                <div class="excel-form-cell">
+                  <label>Expiration Status</label>
+                  <input type="text" id="pad-info-exp-status" class="excel-form-input" readonly value="Ok">
+                </div>
+                <div class="excel-form-cell">
+                  <label>Inventory Status</label>
+                  <input type="text" id="pad-info-inventory-status" class="excel-form-input" readonly value="Active">
+                </div>
+
+                <!-- Row 5: Notes -->
+                <div class="excel-form-cell" style="grid-column: span 2;">
+                  <label>Notes</label>
+                  <textarea id="pad-info-notes" class="excel-form-input" rows="3"
+                    placeholder="Enter pad notes or batch details..."></textarea>
+                </div>
+              </div>
+
+              <!-- Row 6: Save | Cancel | Delete buttons -->
+              <div class="excel-form-actions" style="justify-content: flex-start; gap: 10px;">
+                <button type="button" class="excel-pill-btn" onclick="savePadInformation()">Save</button>
+                <button type="button" class="excel-pill-btn" style="background:#475569;"
+                  onclick="closePadForm()">Cancel</button>
+                <button type="button" class="excel-pill-btn" id="btn-delete-pad" style="background:#DC2626;"
+                  onclick="deletePadInformation()">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. TAB: AED Batteries (Screenshot 3 & Battery Information Form) -->
+        <div id="subtab-batteries" class="aed-subtab-pane" style="display:none;">
+          <!-- 3A: Table View (Screenshot 3) -->
+          <div id="battery-list-container">
+            <div class="aed-panel-banner">
+              <span id="battery-list-banner-title">AED Batteries</span>
+              <div class="banner-btn-group">
+                <button type="button" class="excel-pill-btn sm" onclick="openBatteryForm()">+ Add Battery</button>
+                <button type="button" class="excel-pill-btn sm" id="btn-toggle-archived-bat"
+                  onclick="toggleArchivedBatteries()">Archived</button>
+              </div>
+            </div>
+
+            <div class="excel-table-card">
+              <table class="excel-table ice-blue-header">
+                <thead>
+                  <tr>
+                    <th style="width: 44px; text-align:center;">View</th>
+                    <th>Brand</th>
+                    <th>Model</th>
+                    <th>SKU</th>
+                    <th>Lot</th>
+                    <th>Expiration Date</th>
+                    <th>Expiration Status</th>
+                  </tr>
+                </thead>
+                <tbody id="panel-batteries-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 3B: Battery Information Form View (Exact 1:1 from User Screenshot) -->
+          <div id="battery-form-container" style="display:none;">
+            <div class="aed-panel-banner">
+              <span>Battery information</span>
+              <div class="banner-btn-group">
+                <button type="button" class="excel-pill-btn sm" onclick="openSelectSpareBatteryModal()">Select from
+                  Spare</button>
+                <button type="button" class="excel-pill-btn sm" onclick="toggleArchivedBatteries()">Archived</button>
+              </div>
+            </div>
+
+            <div class="excel-form-2col-card">
+              <div class="excel-form-2col">
+                <!-- Row 1: Left = Location, Right = Brand* -->
+                <div class="excel-form-cell">
+                  <label>Location</label>
+                  <input type="text" id="bat-info-location" class="excel-form-input" readonly>
+                </div>
+                <div class="excel-form-cell">
+                  <label>Brand*</label>
+                  <select id="bat-info-brand" class="excel-form-input" onchange="onBatteryBrandChange()">
+                    <option value="" selected>-Select Brand-</option>
+                    <option value="ZOLL">ZOLL</option>
+                    <option value="Philips">Philips</option>
+                    <option value="Cardiac Science">Cardiac Science</option>
+                    <option value="Defibtech">Defibtech</option>
+                    <option value="Physio-Control">Physio-Control</option>
+                    <option value="Heartsine">Heartsine</option>
+                  </select>
+                </div>
+
+                <!-- Row 2: Left = Model*, Right = SKU -->
+                <div class="excel-form-cell">
+                  <label>Model*</label>
+                  <select id="bat-info-model" class="excel-form-input" onchange="onBatteryModelChange()">
+                    <option value="" selected>-Select Model-</option>
+                    <!-- Populated dynamically -->
+                  </select>
+                </div>
+                <div class="excel-form-cell">
+                  <label>SKU</label>
+                  <input type="text" id="bat-info-sku" class="excel-form-input" placeholder="e.g. 8511-001101-01">
+                </div>
+
+                <!-- Row 3: Left = Lot number, Right = Purchase Date* -->
+                <div class="excel-form-cell">
+                  <label>Lot number</label>
+                  <input type="text" id="bat-info-lot" class="excel-form-input"
+                    placeholder="Enter lot or serial number">
+                </div>
+                <div class="excel-form-cell">
+                  <label>Purchase Date*</label>
+                  <input type="date" id="bat-info-purchase-date" class="excel-form-input">
+                </div>
+
+                <!-- Row 4: Left = Expiration Date*, Right = Expiration Status -->
+                <div class="excel-form-cell">
+                  <label>Expiration Date*</label>
+                  <input type="date" id="bat-info-exp-date" class="excel-form-input"
+                    onchange="calculateBatteryExpirationStatus()">
+                </div>
+                <div class="excel-form-cell">
+                  <label>Expiration Status</label>
+                  <input type="text" id="bat-info-exp-status" class="excel-form-input" readonly value="Ok">
+                </div>
+
+                <!-- Row 5: Left = Inventory Status, Right = (blank/clean) -->
+                <div class="excel-form-cell">
+                  <label>Inventory Status</label>
+                  <input type="text" id="bat-info-inventory-status" class="excel-form-input" readonly value="Active">
+                </div>
+                <div class="excel-form-cell">
+                  <!-- Clean placeholder for grid symmetry -->
+                </div>
+
+                <!-- Row 6: Notes -->
+                <div class="excel-form-cell" style="grid-column: span 2;">
+                  <label>Notes</label>
+                  <textarea id="bat-info-notes" class="excel-form-input" rows="3"
+                    placeholder="Enter battery notes, batch details, or installation notes..."></textarea>
+                </div>
+              </div>
+
+              <!-- Row 7: Save | Cancel | Delete buttons -->
+              <div class="excel-form-actions" style="justify-content: flex-start; gap: 10px;">
+                <button type="button" class="excel-pill-btn" onclick="saveBatteryInformation()">Save</button>
+                <button type="button" class="excel-pill-btn" style="background:#475569;"
+                  onclick="closeBatteryForm()">Cancel</button>
+                <button type="button" class="excel-pill-btn" id="btn-delete-battery" style="background:#DC2626;"
+                  onclick="deleteBatteryInformation()">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. TAB: AED Inspections (Screenshots 1-4: Full Single-Page Register Inspection) -->
+        <div id="subtab-inspections" class="aed-subtab-pane" style="display:none;">
+          <!-- 4A: Table View -->
+          <div id="inspection-list-container">
+            <div class="excel-equipment-search-row">
+              <div class="excel-search-box-wrap">
+                <span class="excel-checkbox-box"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <div class="excel-search-input-field">
+                  <input type="text" id="panel-insp-search" oninput="renderPanelInspections()" placeholder="Search...">
+                </div>
+              </div>
+            </div>
+
+            <div class="aed-panel-banner">
+              <span id="insp-list-banner-title">AED Inspections</span>
+              <div class="banner-btn-group">
+                <button type="button" class="excel-pill-btn sm" onclick="openRegisterInspectionForm()">+ Add
+                  Inspection</button>
+                <button type="button" class="excel-pill-btn sm" id="btn-toggle-archived-panel-insp"
+                  onclick="toggleArchivedPanelInspections()">Archived</button>
+              </div>
+            </div>
+
+            <div class="excel-table-card">
+              <table class="excel-table ice-blue-header">
+                <thead>
+                  <tr>
+                    <th style="width: 44px; text-align:center;">View</th>
+                    <th>Location</th>
+                    <th>Equipment</th>
+                    <th>Inspection Date</th>
+                    <th>Inspection Status</th>
+                    <th style="width: 75px; text-align:center;">Download</th>
+                  </tr>
+                </thead>
+                <tbody id="panel-inspections-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 4B: Register Inspection Form View (Exact 1:1 Single Page from Screenshots 1-4) -->
+          <div id="inspection-form-container" style="display:none;">
+            <!-- Banner with Back Button (Screenshot 1) -->
+            <div class="aed-panel-banner">
+              <span>AED Inspections</span>
+              <div class="banner-btn-group">
+                <button type="button" class="excel-pill-btn sm" onclick="closeInspectionForm()">Back</button>
+              </div>
+            </div>
+
+            <!-- Subheader Bar (Screenshot 1) -->
+            <div class="inspection-section-bar">Register Inspection</div>
+
+            <!-- Unassigned Equipment Warning (Developer notes requirement) -->
+            <div id="insp-warning-unassigned" class="insp-warning-banner" style="display:none;">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <span>Warning: No Pads or Batteries have been assigned to this AED. Ensure equipment is properly attached
+                before completing inspection.</span>
+            </div>
+
+            <!-- Top Metadata 2-Column Card (Screenshot 1) -->
+            <div class="excel-form-2col-card">
+              <div class="excel-form-2col">
+                <!-- Row 1: Inspector | Location -->
+                <div class="excel-form-cell">
+                  <label>Inspector</label>
+                  <input type="text" id="insp-form-inspector" class="excel-form-input" value="Christine Miller (Admin)">
+                </div>
+                <div class="excel-form-cell">
+                  <label>Location</label>
+                  <input type="text" id="insp-form-location" class="excel-form-input" readonly>
+                </div>
+
+                <!-- Row 2: Inspection Date* | AED Serial Number -->
+                <div class="excel-form-cell">
+                  <label>Inspection date*</label>
+                  <input type="date" id="insp-form-date" class="excel-form-input">
+                </div>
+                <div class="excel-form-cell">
+                  <label>AED Serial Number</label>
+                  <input type="text" id="insp-form-serial" class="excel-form-input" readonly>
+                </div>
+
+                <!-- Row 3: Assigned Pads (Full width) -->
+                <div class="excel-form-cell" style="grid-column: span 2;">
+                  <label>Pads:</label>
+                  <div id="insp-form-pads" class="insp-assigned-box">
+                    <span class="text-muted">Loading assigned pads...</span>
+                  </div>
+                </div>
+
+                <!-- Row 4: Assigned Batteries (Full width) -->
+                <div class="excel-form-cell" style="grid-column: span 2;">
+                  <label>Batteries:</label>
+                  <div id="insp-form-batteries" class="insp-assigned-box">
+                    <span class="text-muted">Loading assigned batteries...</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Overrides & Quick Actions Bar (Screenshot 1) -->
+            <div class="insp-override-container">
+              <div class="insp-override-box">
+                <label class="insp-override-label">
+                  <input type="checkbox" id="chk-override-out-of-service" onchange="onOverrideOutOfServiceChange()">
+                  <div>
+                    <strong>Set AED Out of Service (Override questionnaire)</strong>
+                    <div style="font-size: 11px; color: #64748B; margin-top: 2px;">Notes and signature are required
+                    </div>
+                  </div>
+                </label>
+              </div>
+              <div class="insp-override-box">
+                <label class="insp-override-label">
+                  <input type="checkbox" id="chk-bulk-approve" onchange="onBulkApproveChange()">
+                  <div>
+                    <strong>Bulk-approve all</strong>
+                    <div style="font-size: 11px; color: #64748B; margin-top: 2px;">Overrides questionnaire and
+                      automatically applies the passing response to each question. Notes and signature are required
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- 15 Questions List (Screenshots 1-4) -->
+            <div class="insp-questions-list" id="insp-questions-list">
+
+              <!-- Question 1 -->
+              <div class="insp-q-card" id="card-q1">
+                <div class="insp-q-title">
+                  <span>Is the AED in its assigned location?*</span>
+                </div>
+                <div class="insp-q-row">
+                  <div class="insp-q-options">
+                    <label class="insp-q-option"><input type="radio" name="insp_q1" value="Yes"
+                        onchange="evaluateQuestion(1)"> Yes</label>
+                    <label class="insp-q-option"><input type="radio" name="insp_q1" value="No"
+                        onchange="evaluateQuestion(1)"> No</label>
+                  </div>
+                  <span class="insp-status-indicator pending" id="badge-q1">Pending</span>
+                </div>
+                <input type="text" id="notes-q1" class="insp-q-notes-input" placeholder="Notes (optional)">
+              </div>
+
+              <!-- Question 2 -->
+              <div class="insp-q-card" id="card-q2">
+                <div class="insp-q-title">
+                  <span>Is it visible and accessible?*</span>
+                </div>
+                <div class="insp-q-row">
+                  <div class="insp-q-options">
+                    <label class="insp-q-option"><input type="radio" name="insp_q2" value="Yes"
+                        onchange="evaluateQuestion(2)"> Yes</label>
+                    <label class="insp-q-option"><input type="radio" name="insp_q2" value="No"
+                        onchange="evaluateQuestion(2)"> No</label>
+                  </div>
+                  <span class="insp-status-indicator pending" id="badge-q2">Pending</span>
+                </div>
+                <input type="text" id="notes-q2" class="insp-q-notes-input" placeholder="Notes (optional)">
+              </div>
+
+              <!-- Question 3 -->
+              <div class="insp-q-card" id="card-q3">
+                <div class="insp-q-title">
+                  <span>Does the status indicator show "Ready", "Green Check Mark", or "Blinking Green Light"?*</span>
+                </div>
+                <div class="insp-q-row">
+                  <div class="insp-q-options">
+                    <label class="insp-q-option"><input type="radio" name="insp_q3" value="Yes"
+                        onchange="evaluateQuestion(3)"> Yes</label>
+                    <label class="insp-q-option"><input type="radio" name="insp_q3" value="No"
+                        onchange="evaluateQuestion(3)"> No</label>
+                  </div>
+                  <span class="insp-status-indicator pending" id="badge-q3">Pending</span>
+                </div>
+                <input type="text" id="notes-q3" class="insp-q-notes-input" placeholder="Notes (optional)">
+              </div>
+
+              <!-- Question 4 (Note: No = Pass, Yes = Fail) -->
+              <div class="insp-q-card" id="card-q4">
+                <div class="insp-q-title">
+                  <span>Are there any warning lights or audible alarms?*</span>
+                </div>
+                <div class="insp-q-row">
+                  <div class="insp-q-options">
+                    <label class="insp-q-option"><input type="radio" name="insp_q4" value="Yes"
+                        onchange="evaluateQuestion(4)"> Yes</label>
+                    <label class="insp-q-option"><input type="radio" name="insp_q4" value="No"
+                        onchange="evaluateQuestion(4)"> No</label>
+                  </div>
+                  <span class="insp-status-indicator pending" id="badge-q4">Pending</span>
+                </div>
+                <input type="text" id="notes-q4" class="insp-q-notes-input" placeholder="Notes (optional)">
+              </div>
+
+              <!-- Question 5 (Conditional Trigger) -->
+              <div class="insp-q-card" id="card-q5">
+                <div class="insp-q-title">
+                  <span>Has the AED been used since the last inspection?*</span>
+                </div>
+                <div class="insp-q-row">
+                  <div class="insp-q-options">
+                    <label class="insp-q-option"><input type="radio" name="insp_q5" value="Yes"
+                        onchange="evaluateQuestion(5)"> Yes</label>
+                    <label class="insp-q-option"><input type="radio" name="insp_q5" value="No"
+                        onchange="evaluateQuestion(5)"> No</label>
+                  </div>
+                  <span class="insp-status-indicator pending" id="badge-q5">Pending</span>
+                </div>
+                <input type="text" id="notes-q5" class="insp-q-notes-input" placeholder="Notes (optional)">
+              </div>
+
+              <!-- Question 6 (Conditional on Q5 being Yes) -->
+              <div class="insp-q-card" id="card-q6" style="display:none;">
+                <div class="insp-q-title">
+                  <span>Have the Pads been replaced?*</span>
+                  <span class="conditional-badge">Required if AED was used</span>
+                </div>
+                <div class="insp-q-row">
+                  <div class="insp-q-options">
+                    <label class="insp-q-option"><input type="radio" name="insp_q6" value="Yes"
+                        onchange="evaluateQuestion(6)"> Yes</label>
+                    <label class="insp-q-option"><input type="radio" name="insp_q6" value="No"
+                        onchange="evaluateQuestion(6)"> No</label>
+                  </div>
+                  <span class="insp-status-indicator pending" id="badge-q6">Pending</span>
+                </div>
+                <input type="text" id="notes-q6" class="insp-q-notes-input" placeholder="Notes (optional)">
+              </div>
+
+              <!-- Question 7 -->
+              <div class="insp-q-card" id="card-q7">
+                <div class="insp-q-title">
+                  <span>Are the adult electrode pads installed and within their expiration date?*</span>
+                </div>
+                <div class="insp-q-row">
+                  <div class="insp-q-options">
+                    <label class="insp-q-option"><input type="radio" name="insp_q7" value="Yes"
+                        onchange="evaluateQuestion(7)"> Yes</label>
+                    <label class="insp-q-option"><input type="radio" name="insp_q7" value="No"
+                        onchange="evaluateQuestion(7)"> No</label>
+                  </div>
+                  <span class="insp-status-indicator pending" id="badge-q7">Pending</span>
+                </div>
+                <input type="text" id="notes-q7" class="insp-q-notes-input" placeholder="Notes (optional)">
+              </div>
+
+              <!-- Question 8 -->
+              <div class="insp-q-card" id="card-q8">
+                <div class="insp-q-title">
+                  <span>If pediatric electrode pads are present, are they within their expiration date?*</span>
+                </div>
+                <div class="insp-q-row">
+                  <div class="insp-q-options">
+                    <label class="insp-q-option"><input type="radio" name="insp_q8" value="Yes"
+                        onchange="evaluateQuestion(8)"> Yes</label>
+                    <label class="insp-q-option"><input type="radio" name="insp_q8" value="No"
+                        onchange="evaluateQuestion(8)"> No</label>
+                    <label class="insp-q-option"><input type="radio" name="insp_q8" value="Not applicable"
+                        onchange="evaluateQuestion(8)"> Not applicable</label>
+                  </div>
+                  <span class="insp-status-indicator pending" id="badge-q8">Pending</span>
+                </div>
+                <input type="text" id="notes-q8" class="insp-q-notes-input" placeholder="Notes (optional)">
+              </div>
+
+              <!-- Question 9 -->
+              <div class="insp-q-card" id="card-q9">
+                <div class="insp-q-title">
+                  <span>Is the installed battery within its service/expiration date?*</span>
+                </div>
+                <div class="insp-q-row">
+                  <div class="insp-q-options">
+                    <label class="insp-q-option"><input type="radio" name="insp_q9" value="Yes"
+                        onchange="evaluateQuestion(9)"> Yes</label>
+                    <label class="insp-q-option"><input type="radio" name="insp_q9" value="No"
+                        onchange="evaluateQuestion(9)"> No</label>
+                  </div>
+                  <span class="insp-status-indicator pending" id="badge-q9">Pending</span>
+                </div>
+                <input type="text" id="notes-q9" class="insp-q-notes-input" placeholder="Notes (optional)">
+              </div>
+
+              <!-- Question 10 -->
+              <div class="insp-q-card" id="card-q10">
+                <div class="insp-q-title">
+                  <span>Is the AED free of damage?*</span>
+                </div>
+                <div class="insp-q-row">
+                  <div class="insp-q-options">
+                    <label class="insp-q-option"><input type="radio" name="insp_q10" value="Yes"
+                        onchange="evaluateQuestion(10)"> Yes</label>
+                    <label class="insp-q-option"><input type="radio" name="insp_q10" value="No"
+                        onchange="evaluateQuestion(10)"> No</label>
+                  </div>
+                  <span class="insp-status-indicator pending" id="badge-q10">Pending</span>
+                </div>
+                <input type="text" id="notes-q10" class="insp-q-notes-input" placeholder="Notes (optional)">
+              </div>
+
+              <!-- Question 11 -->
+              <div class="insp-q-card" id="card-q11">
+                <div class="insp-q-title">
+                  <span>If there's an AED cabinet, is it free of damage?*</span>
+                </div>
+                <div class="insp-q-row">
+                  <div class="insp-q-options">
+                    <label class="insp-q-option"><input type="radio" name="insp_q11" value="Yes"
+                        onchange="evaluateQuestion(11)"> Yes</label>
+                    <label class="insp-q-option"><input type="radio" name="insp_q11" value="No"
+                        onchange="evaluateQuestion(11)"> No</label>
+                    <label class="insp-q-option"><input type="radio" name="insp_q11" value="Not applicable"
+                        onchange="evaluateQuestion(11)"> Not applicable</label>
+                  </div>
+                  <span class="insp-status-indicator pending" id="badge-q11">Pending</span>
+                </div>
+                <input type="text" id="notes-q11" class="insp-q-notes-input" placeholder="Notes (optional)">
+              </div>
+
+              <!-- Question 12 -->
+              <div class="insp-q-card" id="card-q12">
+                <div class="insp-q-title">
+                  <span>Is the Rescue Kit complete?*</span>
+                </div>
+                <div class="insp-q-row">
+                  <div class="insp-q-options">
+                    <label class="insp-q-option"><input type="radio" name="insp_q12" value="Yes"
+                        onchange="evaluateQuestion(12)"> Yes</label>
+                    <label class="insp-q-option"><input type="radio" name="insp_q12" value="No"
+                        onchange="evaluateQuestion(12)"> No</label>
+                  </div>
+                  <span class="insp-status-indicator pending" id="badge-q12">Pending</span>
+                </div>
+                <input type="text" id="notes-q12" class="insp-q-notes-input" placeholder="Notes (optional)">
+              </div>
+
+              <!-- Question 13 -->
+              <div class="insp-q-card" id="card-q13">
+                <div class="insp-q-title">
+                  <span>Is the Bleed Kit complete?*</span>
+                </div>
+                <div class="insp-q-row">
+                  <div class="insp-q-options">
+                    <label class="insp-q-option"><input type="radio" name="insp_q13" value="Yes"
+                        onchange="evaluateQuestion(13)"> Yes</label>
+                    <label class="insp-q-option"><input type="radio" name="insp_q13" value="No"
+                        onchange="evaluateQuestion(13)"> No</label>
+                  </div>
+                  <span class="insp-status-indicator pending" id="badge-q13">Pending</span>
+                </div>
+                <input type="text" id="notes-q13" class="insp-q-notes-input" placeholder="Notes (optional)">
+              </div>
+
+              <!-- Question 14 -->
+              <div class="insp-q-card" id="card-q14">
+                <div class="insp-q-title">
+                  <span>Is the AED Sign Visible and Decals indicating AED is Present?*</span>
+                </div>
+                <div class="insp-q-row">
+                  <div class="insp-q-options">
+                    <label class="insp-q-option"><input type="radio" name="insp_q14" value="Yes"
+                        onchange="evaluateQuestion(14)"> Yes</label>
+                    <label class="insp-q-option"><input type="radio" name="insp_q14" value="No"
+                        onchange="evaluateQuestion(14)"> No</label>
+                  </div>
+                  <span class="insp-status-indicator pending" id="badge-q14">Pending</span>
+                </div>
+                <input type="text" id="notes-q14" class="insp-q-notes-input" placeholder="Notes (optional)">
+              </div>
+
+              <!-- Question 15 -->
+              <div class="insp-q-card" id="card-q15">
+                <div class="insp-q-title">
+                  <span>Is the AED rescue-ready today?*</span>
+                </div>
+                <div class="insp-q-row">
+                  <div class="insp-q-options">
+                    <label class="insp-q-option"><input type="radio" name="insp_q15" value="Yes"
+                        onchange="evaluateQuestion(15)"> Yes</label>
+                    <label class="insp-q-option"><input type="radio" name="insp_q15" value="No"
+                        onchange="evaluateQuestion(15)"> No</label>
+                  </div>
+                  <span class="insp-status-indicator pending" id="badge-q15">Pending</span>
+                </div>
+                <input type="text" id="notes-q15" class="insp-q-notes-input" placeholder="Notes (optional)">
+              </div>
+
+            </div>
+
+            <!-- Bottom Section: Additional Comments, Photo Upload & Signature (Screenshot 4) -->
+            <div class="excel-form-2col-card">
+              <div class="excel-form-cell" style="margin-bottom: 16px;">
+                <label>Additional Comments</label>
+                <textarea id="insp-form-comments" class="excel-form-input" rows="3"
+                  placeholder="Enter general comments, corrective actions taken, or maintenance observations..."></textarea>
+              </div>
+
+              <div class="excel-form-2col">
+                <!-- Left: Photo Upload -->
+                <div class="excel-form-cell">
+                  <label>Upload a photo of the equipment*</label>
+                  <input type="file" id="insp-form-photo" accept="image/*" class="excel-form-input"
+                    onchange="handleInspectionPhotoUpload(event)">
+                  <div id="insp-photo-preview-wrap" style="display:none; margin-top: 8px;">
+                    <img id="insp-photo-preview-img"
+                      style="max-height: 110px; border-radius: 3px; border: 1px solid #CBD5E1;">
+                  </div>
+                </div>
+
+                <!-- Right: Sign Inspection -->
+                <div class="excel-form-cell">
+                  <label>Sign Inspection*</label>
+                  <div class="insp-signature-row">
+                    <input type="text" id="insp-form-signature" class="excel-form-input"
+                      placeholder="Type inspector full name or sign pop-up" value="Christine Miller">
+                    <button type="button" class="excel-pill-btn sm" onclick="openSignatureModal()"
+                      style="white-space: nowrap;">Sign Pop-up</button>
+                  </div>
+                  <div id="insp-signature-confirmed"
+                    style="font-size: 11px; color: #16A34A; margin-top: 4px; display: none;">
+                    <i class="fa-solid fa-circle-check"></i> Electronically signed and verified
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="excel-form-actions" style="justify-content: flex-start; gap: 10px; margin-top: 24px;">
+                <button type="button" class="excel-pill-btn" onclick="saveInspectionForm()">Save</button>
+                <button type="button" class="excel-pill-btn" style="background:#475569;"
+                  onclick="closeInspectionForm()">Cancel</button>
+                <button type="button" class="excel-pill-btn" id="btn-delete-inspection" style="background:#DC2626;"
+                  onclick="deleteInspectionForm()">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. TAB: Rescue Events (Screenshot 5) -->
+        <div id="subtab-rescue" class="aed-subtab-pane" style="display:none;">
+          <div class="excel-equipment-search-row">
+            <div class="excel-search-box-wrap">
+              <span class="excel-checkbox-box"><i class="fa-solid fa-magnifying-glass"></i></span>
+              <div class="excel-search-input-field">
+                <input type="text" id="panel-rescue-search" oninput="renderPanelRescue()" placeholder="Search...">
+              </div>
+            </div>
+          </div>
+
+          <div class="aed-panel-banner">
+            <span>Rescue Events</span>
+            <div class="banner-btn-group">
+              <button type="button" class="excel-pill-btn sm" onclick="openUploadRescueModal()"><i class="fa-solid fa-plus"></i> Upload</button>
+            </div>
+          </div>
+
+          <div class="excel-table-card">
+            <table class="excel-table ice-blue-header">
+              <thead>
+                <tr>
+                  <th>Location</th>
+                  <th>Equipment</th>
+                  <th>Event Date</th>
+                  <th style="width: 70px; text-align:center;">Download</th>
+                </tr>
+              </thead>
+              <tbody id="panel-rescue-tbody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 6. TAB: System Log (Screenshots & System Log Requirement) -->
+        <div id="subtab-system-log" class="aed-subtab-pane" style="display:none;">
+          <div class="excel-equipment-search-row">
+            <div class="excel-search-box-wrap">
+              <span class="excel-checkbox-box"><i class="fa-solid fa-magnifying-glass"></i></span>
+              <div class="excel-search-input-field">
+                <input type="text" id="panel-log-search" oninput="renderSystemLog('panel')" placeholder="Search...">
+              </div>
+            </div>
+          </div>
+
+          <div class="aed-panel-banner">
+            <span>System Log</span>
+            <div class="banner-btn-group">
+              <button type="button" class="excel-pill-btn sm" onclick="exportSystemLogCSV()"><i
+                  class="fa-solid fa-download"></i> Export Log (CSV)</button>
+            </div>
+          </div>
+
+          <div class="excel-table-card">
+            <table class="excel-table">
+              <thead>
+                <tr>
+                  <th style="width: 160px;">Date & Time</th>
+                  <th style="width: 140px;">User</th>
+                  <th style="width: 110px;">Module</th>
+                  <th style="width: 160px;">Action</th>
+                  <th>Record / Details</th>
+                  <th style="width: 90px; text-align:center;">Status</th>
+                  <th style="width: 110px;">Source IP</th>
+                </tr>
+              </thead>
+              <tbody id="panel-system-log-tbody">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- VIEW: STANDALONE SYSTEM LOG (Sidebar 'System Log' View)          -->
+      <!-- ================================================================ -->
+      <section id="system-log-view" class="view-section" style="display:none;">
+        <div class="excel-equipment-search-row">
+          <div class="excel-search-box-wrap">
+            <span class="excel-checkbox-box"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <div class="excel-search-input-field">
+              <input type="text" id="standalone-log-search" oninput="renderSystemLog('standalone')"
+                placeholder="Search...">
+            </div>
+          </div>
+        </div>
+
+        <div class="aed-panel-banner">
+          <span>System Audit Log (All Actions with Date & Time)</span>
+          <div class="banner-btn-group">
+            <button type="button" class="excel-pill-btn sm" onclick="exportSystemLogCSV()"><i
+                class="fa-solid fa-download"></i> Export Log (CSV)</button>
+          </div>
+        </div>
+
+        <div class="excel-table-card">
+          <table class="excel-table">
+            <thead>
+              <tr>
+                <th style="width: 160px;">Date & Time</th>
+                <th style="width: 140px;">User</th>
+                <th style="width: 110px;">Module</th>
+                <th style="width: 160px;">Action</th>
+                <th>Record / Details</th>
+                <th style="width: 90px; text-align:center;">Status</th>
+                <th style="width: 110px;">Source IP</th>
+              </tr>
+            </thead>
+            <tbody id="standalone-system-log-tbody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Duplicate users-view and customer-no-portal-view removed; canonical view is located above -->
+    </div>
+  </div>
+
+
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: ADD CPR CERTIFICATION (Exact Excel Sheet 'CPR Cert Form')      -->
+  <!-- ====================================================================== -->
+  <div id="modal-cpr-form" class="modal-overlay">
+    <div class="modal-excel-card">
+      <div class="modal-excel-header">
+        <h3>CPR Class Certification</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-cpr-form')">&times;</button>
+      </div>
+      <div class="modal-excel-body">
+        <div class="excel-form-grid">
+          <div class="excel-form-group col-span-2">
+            <label>Location (dropdown)*</label>
+            <select id="cpr-loc-select" class="excel-form-control">
+              <!-- Rendered via JS -->
+            </select>
+          </div>
+          <div class="excel-form-group">
+            <label>Select Class type (dropdown)*</label>
+            <select id="cpr-class-type" class="excel-form-control">
+              <option value="" selected>-Select Class Type-</option>
+              <option value="CPR/AED/FA">CPR/AED/FA</option>
+              <option value="CPR/AED">CPR/AED</option>
+              <option value="First Aid">First Aid</option>
+              <option value="BLS/FA">BLS/FA</option>
+              <option value="BBP">BBP</option>
+              <option value="Adult & Pediatric CPR/AED">Adult & Pediatric CPR/AED</option>
+              <option value="BLS Healthcare Provider">BLS Healthcare Provider</option>
+            </select>
+          </div>
+          <div class="excel-form-group">
+            <label>Accreditation type*</label>
+            <select id="cpr-accred" class="excel-form-control">
+              <option value="" selected>-Select Accreditation-</option>
+              <option value="AHA">AHA</option>
+              <option value="American Red Cross">American Red Cross</option>
+              <option value="HSI">HSI</option>
+              <option value="NSC">NSC</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="excel-form-group">
+            <label>Participant First Name*</label>
+            <input type="text" id="cpr-first-name" class="excel-form-control" placeholder="First Name">
+          </div>
+          <div class="excel-form-group">
+            <label>Participant Last Name*</label>
+            <input type="text" id="cpr-last-name" class="excel-form-control" placeholder="Last Name">
+          </div>
+          <div class="excel-form-group">
+            <label>Participant Email*</label>
+            <input type="email" id="cpr-email" class="excel-form-control" placeholder="participant@example.com">
+          </div>
+          <div class="excel-form-group">
+            <label>Participant Phone number*</label>
+            <input type="tel" id="cpr-phone" class="excel-form-control" placeholder="(555) 000-0000">
+          </div>
+          <div class="excel-form-group">
+            <label>Class Date*</label>
+            <input type="date" id="cpr-class-date" class="excel-form-control" onchange="onModalCPRClassDateChange()">
+          </div>
+          <div class="excel-form-group">
+            <label>Expiration Date</label>
+            <input type="date" id="cpr-exp-date" class="excel-form-control">
+          </div>
+        </div>
+      </div>
+      <div class="modal-excel-footer">
+        <button class="btn-action secondary" onclick="closeModal('modal-cpr-form')">Cancel</button>
+        <button class="btn-action btn-edit-toggle" style="background:#0284C7; display:none;" onclick="enableModalEditMode('modal-cpr-form')"><i class="fa-solid fa-pen-to-square" style="margin-right:6px;"></i>Edit Certification</button>
+        <button class="btn-action btn-save-action" onclick="saveCPR()">Save Certification</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: ADD EQUIPMENT                                                   -->
+  <!-- ====================================================================== -->
+  <div id="modal-equipment-form" class="modal-overlay">
+    <div class="modal-excel-card">
+      <div class="modal-excel-header">
+        <h3>Register Equipment</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-equipment-form')">&times;</button>
+      </div>
+      <div class="modal-excel-body">
+        <div class="excel-form-grid">
+          <div class="excel-form-group">
+            <label>Equipment Type*</label>
+            <select id="new-eq-type" class="excel-form-control">
+              <option value="AED">AED</option>
+              <option value="Pads">Pads</option>
+              <option value="Battery">Battery</option>
+            </select>
+          </div>
+          <div class="excel-form-group">
+            <label>Inventory Placement*</label>
+            <select id="new-eq-tab" class="excel-form-control">
+              <option value="active">Active (Assigned to Location)</option>
+              <option value="spare">Spare (Stock / Unassigned)</option>
+            </select>
+          </div>
+          <div class="excel-form-group col-span-2">
+            <label>Location*</label>
+            <select id="new-eq-loc" class="excel-form-control">
+              <!-- Rendered via JS -->
+            </select>
+          </div>
+          <div class="excel-form-group">
+            <label>Brand*</label>
+            <select id="new-eq-brand" class="excel-form-control">
+              <option value="" selected>-Select Brand-</option>
+              <option value="ZOLL">ZOLL</option>
+              <option value="Cardiac Science">Cardiac Science</option>
+              <option value="Philips">Philips</option>
+              <option value="Physio-Control">Physio-Control</option>
+              <option value="Defibtech">Defibtech</option>
+              <option value="HeartSine">HeartSine</option>
+            </select>
+          </div>
+          <div class="excel-form-group">
+            <label>Model*</label>
+            <input type="text" id="new-eq-model" class="excel-form-control" placeholder="e.g. AED 3 or Powerheart G5">
+          </div>
+          <div class="excel-form-group">
+            <label>SKU</label>
+            <input type="text" id="new-eq-sku" class="excel-form-control" placeholder="e.g. ZOL-AED3-01">
+          </div>
+          <div class="excel-form-group">
+            <label>Serial / Lot*</label>
+            <input type="text" id="new-eq-serial" class="excel-form-control">
+          </div>
+          <div class="excel-form-group col-span-2">
+            <label>Expiration Date*</label>
+            <input type="date" id="new-eq-exp" class="excel-form-control">
+          </div>
+        </div>
+      </div>
+      <div class="modal-excel-footer">
+        <button class="btn-action secondary" onclick="closeModal('modal-equipment-form')">Cancel</button>
+        <button class="btn-action" onclick="saveEquipment()">Save Equipment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: SELECT AED FROM SPARE ITEMS                                      -->
+  <!-- ====================================================================== -->
+  <div id="modal-select-spare-aed" class="modal-overlay">
+    <div class="modal-excel-card" style="max-width: 900px; width: 94%;">
+      <div class="modal-excel-header">
+        <h3>Select AED from Spare Equipment</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-select-spare-aed')">&times;</button>
+      </div>
+      <div class="modal-excel-body" style="padding: 16px;">
+        <p style="font-size: 13px; color: #475569; margin-bottom: 14px;">Available spare AED units for this account. Select an AED to load into the form and deploy it to a location or manage its configuration.</p>
+        <div class="excel-table-card" style="max-height: 340px; overflow-y: auto;">
+          <table class="excel-table ice-blue-header">
+            <thead>
+              <tr>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>SKU</th>
+                <th>Serial Number</th>
+                <th>Purchase Date</th>
+                <th>Warranty Date</th>
+                <th>Status</th>
+                <th style="text-align: center; width: 95px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="spare-aed-modal-tbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-excel-footer">
+        <button class="btn-action secondary" onclick="closeModal('modal-select-spare-aed')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: SELECT PAD FROM SPARE ITEMS                                     -->
+  <!-- ====================================================================== -->
+  <div id="modal-select-spare-pad" class="modal-overlay">
+    <div class="modal-excel-card" style="max-width: 820px; width: 92%;">
+      <div class="modal-excel-header">
+        <h3>Select Pad from Spare Items</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-select-spare-pad')">&times;</button>
+      </div>
+      <div class="modal-excel-body" style="padding: 16px;">
+        <p style="font-size: 13px; color: #475569; margin-bottom: 14px;">Available spare pads for the current account.
+          Select a pad to assign it to this AED.</p>
+        <div class="excel-table-card" style="max-height: 320px; overflow-y: auto;">
+          <table class="excel-table ice-blue-header">
+            <thead>
+              <tr>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>SKU</th>
+                <th>Lot Number</th>
+                <th>Expiration Date</th>
+                <th>Status</th>
+                <th style="text-align: center; width: 90px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="spare-pad-modal-tbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-excel-footer">
+        <button class="btn-action secondary" onclick="closeModal('modal-select-spare-pad')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: SELECT BATTERY FROM SPARE ITEMS                                 -->
+  <!-- ====================================================================== -->
+  <div id="modal-select-spare-battery" class="modal-overlay">
+    <div class="modal-excel-card" style="max-width: 860px; width: 92%;">
+      <div class="modal-excel-header">
+        <h3>Select Battery from Spare Items</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-select-spare-battery')">&times;</button>
+      </div>
+      <div class="modal-excel-body" style="padding: 16px;">
+        <p style="font-size: 13px; color: #475569; margin-bottom: 14px;">Available spare batteries for the current
+          account. Select a battery to assign it to this AED.</p>
+        <div class="excel-table-card" style="max-height: 320px; overflow-y: auto;">
+          <table class="excel-table ice-blue-header">
+            <thead>
+              <tr>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>SKU</th>
+                <th>Lot / Serial</th>
+                <th>Purchase Date</th>
+                <th>Expiration Date</th>
+                <th>Status</th>
+                <th style="text-align: center; width: 90px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="spare-battery-modal-tbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-excel-footer">
+        <button class="btn-action secondary" onclick="closeModal('modal-select-spare-battery')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: ADD PAD (Exact Excel Sheet 'AED Pads form')                     -->
+  <!-- ====================================================================== -->
+  <div id="modal-pad-form" class="modal-overlay">
+    <div class="modal-excel-card">
+      <div class="modal-excel-header">
+        <h3>AED Pads — Add Pad</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-pad-form')">&times;</button>
+      </div>
+      <div class="modal-excel-body">
+        <div class="excel-form-grid">
+            <input type="hidden" id="pad-form-type" value="Pads">
+          <div class="excel-form-group">
+            <label>Brand*</label>
+            <input type="text" id="pad-form-brand" class="excel-form-control" placeholder="Brand">
+          </div>
+          <div class="excel-form-group">
+            <label>Model*</label>
+            <input type="text" id="pad-form-model" class="excel-form-control" placeholder="Model">
+          </div>
+          <div class="excel-form-group">
+            <label>SKU</label>
+            <input type="text" id="pad-form-sku" class="excel-form-control" placeholder="SKU">
+          </div>
+          <div class="excel-form-group">
+            <label>Lot Number*</label>
+            <input type="text" id="pad-form-lot" class="excel-form-control" placeholder="Lot">
+          </div>
+          <div class="excel-form-group col-span-2">
+            <label>Expiration Date*</label>
+            <input type="date" id="pad-form-exp-date" class="excel-form-control">
+          </div>
+        </div>
+      </div>
+      <div class="modal-excel-footer">
+        <button class="btn-action secondary" onclick="closeModal('modal-pad-form')">Cancel</button>
+        <button class="btn-action" onclick="savePadRecord()">Save Pad</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: ADD BATTERY (Exact Excel Sheet 'AED Battery form')              -->
+  <!-- ====================================================================== -->
+  <div id="modal-battery-form" class="modal-overlay">
+    <div class="modal-excel-card">
+      <div class="modal-excel-header">
+        <h3>AED Batteries — Add Battery</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-battery-form')">&times;</button>
+      </div>
+      <div class="modal-excel-body">
+        <div class="excel-form-grid">
+          <div class="excel-form-group">
+            <label>Brand*</label>
+            <input type="text" id="bat-form-brand" class="excel-form-control" placeholder="Brand">
+          </div>
+          <div class="excel-form-group">
+            <label>Model*</label>
+            <input type="text" id="bat-form-model" class="excel-form-control" placeholder="Model">
+          </div>
+          <div class="excel-form-group">
+            <label>SKU</label>
+            <input type="text" id="bat-form-sku" class="excel-form-control" placeholder="SKU">
+          </div>
+          <div class="excel-form-group">
+            <label>Lot / Serial*</label>
+            <input type="text" id="bat-form-lot" class="excel-form-control" placeholder="Lot">
+          </div>
+          <div class="excel-form-group col-span-2">
+            <label>Expiration Date*</label>
+            <input type="date" id="bat-form-exp-date" class="excel-form-control">
+          </div>
+        </div>
+      </div>
+      <div class="modal-excel-footer">
+        <button class="btn-action secondary" onclick="closeModal('modal-battery-form')">Cancel</button>
+        <button class="btn-action" onclick="saveBatteryRecord()">Save Battery</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: UPLOAD RESCUE EVENT                                             -->
+  <!-- ====================================================================== -->
+  <div id="modal-rescue-upload" class="modal-overlay">
+    <div class="modal-excel-card">
+      <div class="modal-excel-header">
+        <h3>Upload Rescue Event Data</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-rescue-upload')">&times;</button>
+      </div>
+      <div class="modal-excel-body">
+        <div class="excel-form-grid">
+          <div class="excel-form-group col-span-2">
+            <label>AED Unit*</label>
+            <select id="rescue-form-aed" class="excel-form-control" onchange="onRescueAedChange()">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div class="excel-form-group col-span-2">
+            <label>Location</label>
+            <input type="text" id="rescue-form-location" class="excel-form-control" readonly
+              placeholder="Auto-populated from AED">
+          </div>
+          <div class="excel-form-group col-span-2">
+            <label>Event Date*</label>
+            <input type="date" id="rescue-form-date" class="excel-form-control">
+          </div>
+          <div class="excel-form-group col-span-2">
+            <label>Attach Event Report / ECG Data (PDF/ZIP)</label>
+            <input type="file" id="rescue-form-file" accept=".pdf,.zip,.csv,.txt,image/*" class="excel-form-control">
+          </div>
+          <div class="excel-form-group col-span-2">
+            <label>Event Notes / Responder Description</label>
+            <textarea id="rescue-form-notes" class="excel-form-control" rows="3"
+              placeholder="Describe event details, patient outcome, EMS response..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-excel-footer">
+        <button class="btn-action secondary" onclick="closeModal('modal-rescue-upload')">Cancel</button>
+        <button class="btn-action" onclick="saveRescueUpload()">Upload Event</button>
+      </div>
+    </div>
+  </div>
+  <!-- ====================================================================== -->
+  <!-- MODAL: SIGNATURE POP-UP (Inspection Signature Requirement)             -->
+  <!-- ====================================================================== -->
+  <div id="modal-signature" class="modal-overlay">
+    <div class="modal-excel-card" style="max-width: 500px; width: 92%;">
+      <div class="modal-excel-header">
+        <h3>Sign Inspection</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-signature')">&times;</button>
+      </div>
+      <div class="modal-excel-body" style="padding: 18px;">
+        <p style="font-size: 13px; color: #475569; margin-bottom: 12px;">Sign below or verify your electronic signature
+          for this compliance inspection.</p>
+        <div
+          style="border: 2px dashed #94A3B8; border-radius: 4px; background: #FAFBFD; height: 140px; display: flex; align-items: center; justify-content: center; position: relative;">
+          <canvas id="signature-canvas" width="440" height="130"
+            style="touch-action: none; cursor: crosshair;"></canvas>
+          <span id="canvas-placeholder-text"
+            style="position: absolute; color: #94A3B8; pointer-events: none; font-size: 13px;">Sign with mouse, stylus
+            or touch</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+          <button type="button" class="excel-pill-btn sm" style="background: #94A3B8;"
+            onclick="clearSignatureCanvas()">Clear Signature</button>
+          <div style="font-size: 12px; color: #64748B;">Inspector: <strong>Christine Miller</strong></div>
+        </div>
+      </div>
+      <div class="modal-excel-footer">
+        <button class="btn-action secondary" onclick="closeModal('modal-signature')">Cancel</button>
+        <button class="btn-action" onclick="confirmSignature()">Apply Signature</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: ADD SPARE AED (Spare Equipment Module - Location Restricted)    -->
+  <!-- ====================================================================== -->
+  <div id="modal-add-spare-aed" class="modal-overlay">
+    <div class="modal-excel-card" style="max-width: 680px; width: 95%;">
+      <div class="modal-excel-header">
+        <h3>Spare Equipment — Add Spare AED</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-add-spare-aed')">&times;</button>
+      </div>
+      <div class="modal-excel-body" style="padding: 18px 24px;">
+        <div class="excel-form-grid">
+          <div class="excel-form-group">
+            <label>Location / Deployment</label>
+            <select id="spare-aed-location" class="excel-form-control" onchange="onSpareAEDLocationChange()">
+              <option value="-" selected>- Spare Stock (Unassigned) -</option>
+            </select>
+          </div>
+          <div class="excel-form-group">
+            <label>Inventory Status</label>
+            <input type="text" id="spare-aed-inventory-status" class="excel-form-control" value="Spare" readonly style="background:#F1F5F9; color:#64748B; font-weight:600;">
+          </div>
+          <div class="excel-form-group">
+            <label>Brand*</label>
+            <select id="spare-aed-brand" class="excel-form-control" onchange="onSpareAEDBrandChange()">
+              <option value="" selected>-Select Brand-</option>
+              <option value="ZOLL">ZOLL</option>
+              <option value="Philips">Philips</option>
+              <option value="Cardiac Science">Cardiac Science</option>
+              <option value="Defibtech">Defibtech</option>
+              <option value="Physio-Control">Physio-Control</option>
+              <option value="Heartsine">Heartsine</option>
+            </select>
+          </div>
+          <div class="excel-form-group">
+            <label>Model*</label>
+            <select id="spare-aed-model" class="excel-form-control" onchange="onSpareAEDModelChange()">
+              <option value="" selected>-Select Model-</option>
+            </select>
+          </div>
+          <div class="excel-form-group">
+            <label>SKU</label>
+            <input type="text" id="spare-aed-sku" class="excel-form-control" placeholder="SKU" readonly style="background:#F8FAFC;">
+          </div>
+          <div class="excel-form-group">
+            <label>Serial Number*</label>
+            <input type="text" id="spare-aed-serial" class="excel-form-control" placeholder="Serial Number">
+          </div>
+          <div class="excel-form-group">
+            <label>Purchase Date</label>
+            <input type="date" id="spare-aed-purchase-date" class="excel-form-control" onchange="calculateSpareAEDWarranty()">
+          </div>
+          <div class="excel-form-group">
+            <label>Warranty Expiration Date</label>
+            <input type="date" id="spare-aed-warranty-date" class="excel-form-control" onchange="calculateSpareAEDWarrantyStatus()">
+          </div>
+          <div class="excel-form-group">
+            <label>Warranty / Expiration Status</label>
+            <select id="spare-aed-warranty-status" class="excel-form-control">
+              <option value="Warranty Not Active">Warranty Not Active</option>
+              <option value="Ok">Ok</option>
+              <option value="Active">Active</option>
+              <option value="Expired">Expired</option>
+            </select>
+          </div>
+          <div class="excel-form-group">
+            <label>Manufacturer Registered?</label>
+            <select id="spare-aed-registered" class="excel-form-control">
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+          <div class="excel-form-group col-span-2">
+            <label>Bundle Components (Optional)</label>
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 4px; padding: 10px 14px; font-size: 13px; color: #475569;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 6px;">
+                <input type="checkbox" id="spare-aed-bundle-pads" style="accent-color: #0070C0;"> Include bundled Defib Pads in spare inventory
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="spare-aed-bundle-battery" style="accent-color: #0070C0;"> Include bundled Standby Battery in spare inventory
+              </label>
+            </div>
+          </div>
+          <div class="excel-form-group col-span-2">
+            <label>Notes</label>
+            <textarea id="spare-aed-notes" class="excel-form-control" rows="2" placeholder="e.g. Unassigned backup AED in inventory..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-excel-footer">
+        <button class="btn-action secondary" onclick="closeModal('modal-add-spare-aed')">Cancel</button>
+        <button class="btn-action" onclick="saveSpareAEDRecord()">Save Spare AED</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: ADD SPARE PAD (Spare Equipment Module)                          -->
+  <!-- ====================================================================== -->
+  <div id="modal-add-spare-pad" class="modal-overlay">
+    <div class="modal-excel-card" style="max-width: 580px; width: 95%;">
+      <div class="modal-excel-header">
+        <h3>Spare Equipment — Add Spare Pad</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-add-spare-pad')">&times;</button>
+      </div>
+      <div class="modal-excel-body" style="padding: 16px 20px;">
+
+        <div class="excel-form-grid">
+          <div class="excel-form-group">
+            <label>Location / Deployment</label>
+            <select id="spare-pad-location" class="excel-form-control" onchange="onSparePadLocationChange()">
+              <option value="-" selected>- Spare Stock (Unassigned) -</option>
+            </select>
+          </div>
+          <div class="excel-form-group">
+            <label>Inventory Status</label>
+            <input type="text" id="spare-pad-inventory-status" class="excel-form-control" value="Spare" readonly style="background:#F1F5F9; color:#64748B; font-weight:600;">
+          </div>
+          <div class="excel-form-group">
+            <label>Brand*</label>
+            <select id="spare-pad-brand" class="excel-form-control" onchange="onSparePadBrandChange()">
+              <option value="" selected>-Select Brand-</option>
+              <option value="ZOLL">ZOLL</option>
+              <option value="Philips">Philips</option>
+              <option value="Cardiac Science">Cardiac Science</option>
+              <option value="Defibtech">Defibtech</option>
+              <option value="Physio-Control">Physio-Control</option>
+              <option value="Heartsine">Heartsine</option>
+            </select>
+          </div>
+          <div class="excel-form-group">
+            <label>Model*</label>
+            <select id="spare-pad-model" class="excel-form-control" onchange="onSparePadModelChange()">
+              <option value="" selected>-Select Model-</option>
+            </select>
+          </div>
+          <div class="excel-form-group">
+            <label>SKU</label>
+            <input type="text" id="spare-pad-sku" class="excel-form-control" placeholder="e.g. 8900-0800-01">
+          </div>
+          <div class="excel-form-group">
+            <label>Lot Number*</label>
+            <input type="text" id="spare-pad-lot" class="excel-form-control" placeholder="Lot">
+          </div>
+          <div class="excel-form-group">
+            <label>Expiration Date*</label>
+            <input type="date" id="spare-pad-exp-date" class="excel-form-control" onchange="calculateSparePadExpStatus()">
+          </div>
+          <div class="excel-form-group">
+            <label>Expiration Status</label>
+            <input type="text" id="spare-pad-exp-status" class="excel-form-control" value="Ok" readonly style="background:#F1F5F9; font-weight:600;">
+          </div>
+        </div>
+      </div>
+      <div class="modal-excel-footer">
+        <button class="btn-action secondary" onclick="closeModal('modal-add-spare-pad')">Cancel</button>
+        <button class="btn-action" onclick="saveSparePadRecord()">Save Spare Pad</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: ADD SPARE BATTERY (Spare Equipment Module)                      -->
+  <!-- ====================================================================== -->
+  <div id="modal-add-spare-battery" class="modal-overlay">
+    <div class="modal-excel-card" style="max-width: 580px; width: 95%;">
+      <div class="modal-excel-header">
+        <h3>Spare Equipment — Add Spare Battery</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-add-spare-battery')">&times;</button>
+      </div>
+      <div class="modal-excel-body" style="padding: 16px 20px;">
+        <div class="excel-form-grid">
+          <div class="excel-form-group">
+            <label>Location / Deployment</label>
+            <select id="spare-battery-location" class="excel-form-control" onchange="onSpareBatteryLocationChange()">
+              <option value="-" selected>- Spare Stock (Unassigned) -</option>
+            </select>
+          </div>
+          <div class="excel-form-group">
+            <label>Inventory Status</label>
+            <input type="text" id="spare-battery-inventory-status" class="excel-form-control" value="Spare" readonly style="background:#F1F5F9; color:#64748B; font-weight:600;">
+          </div>
+          <div class="excel-form-group">
+            <label>Brand*</label>
+            <select id="spare-battery-brand" class="excel-form-control" onchange="onSpareBatteryBrandChange()">
+              <option value="" selected>-Select Brand-</option>
+              <option value="ZOLL">ZOLL</option>
+              <option value="Philips">Philips</option>
+              <option value="Cardiac Science">Cardiac Science</option>
+              <option value="Defibtech">Defibtech</option>
+              <option value="Physio-Control">Physio-Control</option>
+              <option value="Heartsine">Heartsine</option>
+            </select>
+          </div>
+          <div class="excel-form-group">
+            <label>Model*</label>
+            <select id="spare-battery-model" class="excel-form-control" onchange="onSpareBatteryModelChange()">
+              <option value="" selected>-Select Model-</option>
+            </select>
+          </div>
+          <div class="excel-form-group">
+            <label>SKU</label>
+            <input type="text" id="spare-battery-sku" class="excel-form-control" placeholder="e.g. 8511-001101-01">
+          </div>
+          <div class="excel-form-group">
+            <label>Serial / Lot*</label>
+            <input type="text" id="spare-battery-lot" class="excel-form-control" placeholder="Serial / Lot">
+          </div>
+          <div class="excel-form-group">
+            <label>Expiration Date*</label>
+            <input type="date" id="spare-battery-exp-date" class="excel-form-control" onchange="calculateSpareBatteryExpStatus()">
+          </div>
+          <div class="excel-form-group">
+            <label>Expiration Status</label>
+            <input type="text" id="spare-battery-exp-status" class="excel-form-control" value="Ok" readonly style="background:#F1F5F9; font-weight:600;">
+          </div>
+        </div>
+      </div>
+      <div class="modal-excel-footer">
+        <button class="btn-action secondary" onclick="closeModal('modal-add-spare-battery')">Cancel</button>
+        <button class="btn-action" onclick="saveSpareBatteryRecord()">Save Spare Battery</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: EQUIPMENT RESOURCES VIEWER                                      -->
+  <!-- ====================================================================== -->
+  <div id="modal-resource-info" class="modal-overlay">
+    <div class="modal-excel-card" style="max-width: 540px; width: 92%;">
+      <div class="modal-excel-header">
+        <h3 id="resource-modal-title">Equipment Resources</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-resource-info')">&times;</button>
+      </div>
+      <div class="modal-excel-body" id="resource-modal-body" style="padding: 20px;">
+        <!-- Filled dynamically via showResourceInfo() -->
+      </div>
+      <div class="modal-excel-footer">
+        <button class="btn-action secondary" onclick="closeModal('modal-resource-info')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: USER INFORMATION (Screenshot 3 Exact 1:1 Design)               -->
+  <!-- ====================================================================== -->
+  <div id="modal-invite-user" class="modal-overlay">
+    <div class="modal-excel-card" style="max-width: 780px; width: 94%; border-radius: 8px; padding: 0; overflow: hidden;">
+      <div class="user-info-form-card" style="border: none; box-shadow: none; padding: 24px 28px 20px 28px;">
+        <div class="user-info-form-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; padding-bottom: 14px;">
+          <h3 style="font-size: 17px; font-weight: 600; color: #1E293B;">User Information</h3>
+          <button class="modal-close-btn" onclick="closeModal('modal-invite-user')" style="font-size: 22px; color: #94A3B8; background: none; border: none; cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+
+        <div class="user-info-form-grid" style="gap: 20px 32px;">
+          <!-- Row 1: Organizations | Role (Screenshot 3) -->
+          <div class="user-form-field">
+            <label>Organizations</label>
+            <div class="user-form-select-wrap">
+              <select id="invite-org-select" class="user-form-control">
+                <option value="">-Select-</option>
+              </select>
+            </div>
+          </div>
+          <div class="user-form-field">
+            <label>Role</label>
+            <div class="user-form-select-wrap">
+              <select id="invite-role" class="user-form-control" onchange="onInviteRoleChange()">
+                <option value="">-Select-</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Row 2: First Name* | Last Name* (Screenshot 3) -->
+          <div class="user-form-field">
+            <label>First Name <span class="required-star">*</span></label>
+            <input type="text" id="invite-first-name" class="user-form-control" placeholder="">
+          </div>
+          <div class="user-form-field">
+            <label>Last Name <span class="required-star">*</span></label>
+            <input type="text" id="invite-last-name" class="user-form-control" placeholder="">
+          </div>
+
+          <!-- Row 3: Email* | Phone Number* (Screenshot 3) -->
+          <div class="user-form-field">
+            <label>Email <span class="required-star">*</span></label>
+            <input type="email" id="invite-email" class="user-form-control" placeholder="">
+          </div>
+          <div class="user-form-field">
+            <label>Phone Number <span class="required-star">*</span></label>
+            <div class="phone-input-group">
+              <span class="phone-prefix"><span class="flag-icon">🇺🇸</span> +1</span>
+              <input type="tel" id="invite-phone" class="phone-number-field" placeholder="201-555-0123">
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden scope & capability card for internal logic -->
+        <input type="hidden" id="invite-location-scope" value="All Locations">
+        <div id="invite-role-perm-card" style="display:none;"></div>
+
+        <!-- Action Buttons -->
+        <div class="user-info-form-actions" style="margin-top: 24px; padding-top: 18px; border-top: 1px solid #E2E8F0; display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" class="btn-action secondary" onclick="closeModal('modal-invite-user')">Cancel</button>
+          <button type="button" class="btn-action" onclick="sendPortalInvite()">
+            <i class="fa-solid fa-check" style="margin-right: 6px;"></i> Save User
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- MODAL: CATALYST AUTHENTICATION EMAIL DISPATCH & PASSWORD SETUP PREVIEW  -->
+  <!-- ====================================================================== -->
+  <div id="modal-email-preview" class="modal-overlay">
+    <div class="modal-excel-card" style="max-width: 660px; width: 94%;">
+      <div class="modal-excel-header">
+        <h3><i class="fa-solid fa-envelope-circle-check" style="margin-right: 8px;"></i> Catalyst Portal Invitation Dispatched</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-email-preview')">&times;</button>
+      </div>
+      <div class="modal-excel-body" style="padding: 16px 20px;">
+        <div class="email-preview-card">
+          <div class="email-meta-header">
+            <div><strong>From:</strong> Zoho Catalyst Authentication &lt;notifications@zohocatalyst.com&gt;</div>
+            <div><strong>To:</strong> <span id="email-preview-to" style="font-weight:600; color:#004182;"></span></div>
+            <div><strong>Subject:</strong> <span id="email-preview-subject" style="font-weight:600;"></span></div>
+            <div style="margin-top:4px; font-size:11px; color:#64748B;">
+              <strong>Catalyst Service:</strong> User Management API &bull; Status: <span style="color:#16A34A; font-weight:600;">Registered in Catalyst Authentication</span>
+            </div>
+          </div>
+          <div class="email-body-content">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+              <div style="background:#004182; color:#FFF; width:34px; height:34px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; font-size:16px;">
+                <i class="fa-solid fa-shield-halved"></i>
+              </div>
+              <div>
+                <strong style="color:#004182; font-size:15px; display:block;">Vital AED Life Safety Portal</strong>
+                <span style="font-size:11.5px; color:#64748B;">Powered by Zoho Catalyst Serverless Authentication</span>
+              </div>
+            </div>
+
+            <p id="email-preview-greeting"></p>
+
+            <div class="email-perm-list">
+              <strong>Assigned Access Rights & Role Privileges:</strong>
+              <ul id="email-preview-perms"></ul>
+            </div>
+
+            <div class="email-cta-box" style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:6px; padding:16px; text-align:center;">
+              <div style="font-size:12.5px; color:#15803D; font-weight:600; margin-bottom:6px;">
+                <i class="fa-solid fa-key" style="margin-right:6px;"></i> Step 1: Create Your Password & Activate Access
+              </div>
+              <div style="font-size:11.5px; color:#475569; margin-bottom:12px;">
+                Click below to complete password setup through Catalyst Authentication and open your customized portal view:
+              </div>
+              <button type="button" class="excel-pill-btn" id="btn-email-activate-now" style="background:#0070C0; font-size:13.5px; padding:10px 26px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">
+                <i class="fa-solid fa-lock-open" style="margin-right:8px;"></i> Create Password & Launch Portal View
+              </button>
+            </div>
+
+            <div style="font-size:11px; color:#94A3B8; text-align:center; margin-top:16px;">
+              Zoho Catalyst BaaS Authentication System &bull; Vital AED Life Safety Corp
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-excel-footer">
+        <button class="btn-action secondary" onclick="closeModal('modal-email-preview')">Close Preview</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Organization (Sys Admin & Reseller Only) -->
+  <div id="modal-add-organization" class="modal-overlay">
+    <div class="modal-excel-card" style="max-width: 620px; width: 95%;">
+      <div class="modal-excel-header">
+        <h3 class="modal-title-wrap"><i class="fa-solid fa-building" style="margin-right: 8px;"></i><span>Add New Organization</span></h3>
+        <button type="button" class="modal-close-btn" onclick="closeModal('modal-add-organization')">&times;</button>
+      </div>
+      <form id="form-add-org" onsubmit="event.preventDefault(); saveNewOrganization();" style="display: flex; flex-direction: column; flex: 1; min-height: 0; margin: 0;">
+        <div class="modal-excel-body" style="padding: 16px 20px;">
+          <div style="font-weight: 700; color: #002244; font-size: 13px; margin-bottom: 12px; border-bottom: 1px solid #E2E8F0; padding-bottom: 6px;">
+            <i class="fa-solid fa-building" style="color: #0070C0; margin-right: 6px;"></i> Company Information
+          </div>
+          <div class="excel-form-grid">
+            <div class="excel-form-group col-span-2">
+              <label>Organization Name <span class="req">*</span></label>
+              <input type="text" id="new-org-name" class="excel-form-control" placeholder="e.g., Orlando Convention Center" required>
+            </div>
+            <div class="excel-form-group">
+              <label>Contact First Name</label>
+              <input type="text" id="new-org-first-name" class="excel-form-control" placeholder="First Name">
+            </div>
+            <div class="excel-form-group">
+              <label>Contact Last Name</label>
+              <input type="text" id="new-org-last-name" class="excel-form-control" placeholder="Last Name">
+            </div>
+            <div class="excel-form-group">
+              <label>Contact Email</label>
+              <input type="email" id="new-org-email" class="excel-form-control" placeholder="contact@example.com">
+            </div>
+            <div class="excel-form-group">
+              <label>Phone</label>
+              <input type="tel" id="new-org-phone" class="excel-form-control" placeholder="(555) 000-0000">
+            </div>
+            <div class="excel-form-group">
+              <label>Website</label>
+              <input type="url" id="new-org-website" class="excel-form-control" placeholder="https://example.com">
+            </div>
+            <div class="excel-form-group" id="new-org-type-container">
+              <label>Organization Type</label>
+              <select id="new-org-type" class="excel-form-control">
+                <option value="Direct Subscriber">Direct Client / Subscriber</option>
+                <option value="Reseller Client">Reseller-Managed Sub-Account</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="font-weight: 700; color: #002244; font-size: 13px; margin: 18px 0 12px 0; border-bottom: 1px solid #E2E8F0; padding-bottom: 6px;">
+            <i class="fa-solid fa-location-dot" style="color: #0070C0; margin-right: 6px;"></i> Headquarters Address
+          </div>
+          <div class="excel-form-grid">
+            <div class="excel-form-group col-span-2">
+              <label>Street Address 1</label>
+              <input type="text" id="new-org-street1" class="excel-form-control" placeholder="123 Main St">
+            </div>
+            <div class="excel-form-group col-span-2">
+              <label>Street Address 2</label>
+              <input type="text" id="new-org-street2" class="excel-form-control" placeholder="Suite 100">
+            </div>
+            <div class="excel-form-group">
+              <label>City</label>
+              <input type="text" id="new-org-city" class="excel-form-control" placeholder="City">
+            </div>
+            <div class="excel-form-group">
+              <label>State</label>
+              <input type="text" id="new-org-state" class="excel-form-control" placeholder="FL">
+            </div>
+            <div class="excel-form-group">
+              <label>ZIP</label>
+              <input type="text" id="new-org-zip" class="excel-form-control" placeholder="33000">
+            </div>
+          </div>
+        </div>
+        <div class="modal-excel-footer">
+          <button type="button" class="btn-action secondary" onclick="closeModal('modal-add-organization')">Cancel</button>
+          <button type="submit" class="btn-action primary"><i class="fa-solid fa-floppy-disk"></i> Create Organization</button>
+        </div>
+      </form>
+    </div>
+  <!-- ====================================================================== -->
+  <!-- MODAL: NEW USER ORGANIZATION SETUP (EMPTY STATE ONBOARDING)            -->
+  <!-- ====================================================================== -->
+  <div id="modal-org-onboarding" class="modal-overlay" style="z-index: 9999;">
+    <div class="modal-excel-card" style="max-width: 640px; width: 95%; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+      <div class="modal-excel-header" style="background: #004182; color: #FFF; padding: 16px 20px;">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-building-circle-check"></i>
+          <span>Welcome to AED Remind — Organization Setup</span>
+        </h3>
+      </div>
+      <form id="form-org-onboarding" onsubmit="event.preventDefault(); saveOnboardingOrganization();" style="display: flex; flex-direction: column; flex: 1; margin: 0;">
+        <div class="modal-excel-body" style="padding: 20px 24px;">
+          <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 6px; padding: 12px 16px; margin-bottom: 18px; font-size: 13px; color: #1E40AF; line-height: 1.5;">
+            <strong>Welcome!</strong> Your user account was created without an organization assigned. To unlock your dashboard and begin managing equipment, please provide your organization details below.
+          </div>
+          <div class="excel-form-grid">
+            <div class="excel-form-group col-span-2">
+              <label>Organization / Company Name <span class="req" style="color: #DC2626;">*</span></label>
+              <input type="text" id="onboarding-org-name" class="excel-form-control" placeholder="e.g., Sunshine Health Network" required>
+            </div>
+            <div class="excel-form-group">
+              <label>Phone Number</label>
+              <input type="tel" id="onboarding-org-phone" class="excel-form-control" placeholder="(555) 000-0000">
+            </div>
+            <div class="excel-form-group">
+              <label>Website</label>
+              <input type="url" id="onboarding-org-website" class="excel-form-control" placeholder="https://example.com">
+            </div>
+            <div class="excel-form-group col-span-2">
+              <label>Headquarters Street Address</label>
+              <input type="text" id="onboarding-org-street" class="excel-form-control" placeholder="123 Main St, Suite 100">
+            </div>
+            <div class="excel-form-group">
+              <label>City</label>
+              <input type="text" id="onboarding-org-city" class="excel-form-control" placeholder="City">
+            </div>
+            <div class="excel-form-group">
+              <label>State</label>
+              <input type="text" id="onboarding-org-state" class="excel-form-control" placeholder="State / Province">
+            </div>
+            <div class="excel-form-group">
+              <label>ZIP / Postal Code</label>
+              <input type="text" id="onboarding-org-zip" class="excel-form-control" placeholder="12345">
+            </div>
+          </div>
+        </div>
+        <div class="modal-excel-footer" style="padding: 14px 24px; background: #F8FAFC; border-top: 1px solid #E2E8F0; display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="submit" class="btn-action primary" style="background: #0070C0; color: #FFF; font-weight: 600; padding: 9px 20px;">
+            <i class="fa-solid fa-check" style="margin-right: 6px;"></i> Complete Setup & Launch Dashboard
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "aed_backend",
+  "version": "1.0.0",
+  "description": "Catalyst Serverless API gateway connecting custom UI to Zoho Creator headless database",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.8",
+    "cors": "^2.8.5",
+    "zcatalyst-sdk-node": "^1.1.2"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}

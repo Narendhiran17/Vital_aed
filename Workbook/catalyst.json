@@ -1,0 +1,12 @@
+{
+  "client": {
+    "source": "client"
+  },
+  "functions": {
+    "targets": [
+      "aed_backend"
+    ],
+    "ignore": [],
+    "source": "functions"
+  }
+}

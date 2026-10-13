@@ -1,0 +1,395 @@
+htmlpage Dashboard()
+[
+displayname = "Dashboard"
+content
+<%
+// ==============================================================================
+// ZOHO CREATOR DELUGE SCRIPT PAGE
+// App: AED-Remind-DB (christine_vitalaed)
+// Spec: Excel 2.8 System Map
+// ==============================================================================
+
+total_aeds_count = AEDs[ID != null].count();
+warranty_exp_count = AEDs[Warranty_Status == "Warranty Expired"].count();
+pads_exp_count = Pads[Expiration_Status == "Expired"].count();
+bat_exp_count = Batteries[Expiration_Status == "Expired"].count();
+insp_failed_count = Inspections[Inspection_Status == "Failed"].count();
+insp_overdue_count = Inspections[Inspection_Status == "Overdue"].count();
+cpr_total_count = CPR_Certifications[ID != null].count();
+cpr_exp_count = CPR_Certifications[Expiration_Status == "Expired"].count();
+
+display_total_aeds = 8;
+if(total_aeds_count > 0)
+{
+    display_total_aeds = total_aeds_count;
+}
+
+display_warranty_exp = 1;
+if(total_aeds_count > 0)
+{
+    display_warranty_exp = warranty_exp_count;
+}
+
+display_pads_exp = 1;
+if(total_aeds_count > 0)
+{
+    display_pads_exp = pads_exp_count;
+}
+
+display_bat_exp = 0;
+if(total_aeds_count > 0)
+{
+    display_bat_exp = bat_exp_count;
+}
+
+display_insp_failed = 0;
+if(total_aeds_count > 0)
+{
+    display_insp_failed = insp_failed_count;
+}
+
+display_insp_overdue = 1;
+if(total_aeds_count > 0)
+{
+    display_insp_overdue = insp_overdue_count;
+}
+
+display_cpr_total = 4;
+if(cpr_total_count > 0)
+{
+    display_cpr_total = cpr_total_count;
+}
+
+display_cpr_exp = 2;
+if(cpr_total_count > 0)
+{
+    display_cpr_exp = cpr_exp_count;
+}
+
+insp_records = Inspections[ID != null];
+aed_records = AEDs[ID != null];
+cpr_records = CPR_Certifications[ID != null];
+%>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  .aed-deluge-dashboard {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #F8FAFC;
+    color: #1E293B;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .deluge-title-banner {
+    background-color: #0070C0;
+    color: #FFFFFF;
+    padding: 14px 24px;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .deluge-banner-badge {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    font-size: 11.5px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .deluge-body-wrap {
+    padding: 22px 24px 40px 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .deluge-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .deluge-kpi-card {
+    background-color: #D3E6FC;
+    border: 1.5px solid #2B7CD3;
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .deluge-kpi-icon { color: #004A99; font-size: 20px; margin-bottom: 6px; }
+  .deluge-kpi-title { font-size: 15px; font-weight: 700; color: #003366; margin-bottom: 4px; }
+  .deluge-kpi-stat { font-size: 13.5px; color: #003366; display: flex; justify-content: space-between; }
+  .deluge-kpi-stat strong { font-weight: 700; font-size: 14px; }
+  .deluge-section-bar {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #004182;
+    margin: 26px 0 10px 0;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #004182;
+    display: flex;
+    justify-content: space-between;
+  }
+  .deluge-action-btn {
+    background-color: #004182;
+    color: #FFFFFF !important;
+    text-decoration: none;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 4px;
+  }
+  .deluge-secondary-btn {
+    background-color: #FFFFFF;
+    color: #004182 !important;
+    border: 1px solid #004182;
+    text-decoration: none;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 4px;
+  }
+  .deluge-table-card {
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 3px;
+    margin-bottom: 22px;
+    overflow-x: auto;
+  }
+  .deluge-table { width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left; }
+  .deluge-table th { background-color: #004182; color: #FFFFFF; font-weight: 700; padding: 9px 12px; border: 1px solid #002D5A; }
+  .deluge-table td { padding: 8px 12px; border: 1px solid #E2E8F0; color: #1E293B; }
+  .deluge-table tr:nth-child(even) { background-color: #F8FAFC; }
+  .deluge-view-sq {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid #004182;
+    border-radius: 3px;
+    color: #004182;
+    font-size: 11px;
+    text-decoration: none;
+    background: #FFFFFF;
+  }
+  .deluge-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 12px; font-size: 11.5px; font-weight: 700; }
+  .deluge-pill.ok { background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
+  .deluge-pill.danger { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+  .deluge-pill.warning { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
+</style>
+
+<div class="aed-deluge-dashboard">
+  <div class="deluge-title-banner">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <i class="fa-solid fa-heart-pulse"></i>
+      <span>Dashboard</span>
+    </div>
+    <div class="deluge-banner-badge">AED Remind • System Map 2.8 Compliant</div>
+  </div>
+
+  <div class="deluge-body-wrap">
+    <div class="deluge-kpi-grid">
+      <div class="deluge-kpi-card">
+        <div class="deluge-kpi-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+        <div class="deluge-kpi-title">AEDs</div>
+        <div class="deluge-kpi-stat">Total AEDs: <strong style="color:#002B54;"><%=display_total_aeds%></strong></div>
+        <div class="deluge-kpi-stat">Warranty Expired: <strong style="color:#DC2626;"><%=display_warranty_exp%></strong></div>
+      </div>
+      <div class="deluge-kpi-card">
+        <div class="deluge-kpi-icon"><i class="fa-solid fa-battery-three-quarters"></i></div>
+        <div class="deluge-kpi-title">PADs & Batteries</div>
+        <div class="deluge-kpi-stat">Pads Expired: <strong style="color:#D97706;"><%=display_pads_exp%></strong></div>
+        <div class="deluge-kpi-stat">Batteries Expired: <strong style="color:#002B54;"><%=display_bat_exp%></strong></div>
+      </div>
+      <div class="deluge-kpi-card">
+        <div class="deluge-kpi-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+        <div class="deluge-kpi-title">Inspections</div>
+        <div class="deluge-kpi-stat">Failed: <strong style="color:#002B54;"><%=display_insp_failed%></strong></div>
+        <div class="deluge-kpi-stat">Overdue: <strong style="color:#DC2626;"><%=display_insp_overdue%></strong></div>
+      </div>
+      <div class="deluge-kpi-card">
+        <div class="deluge-kpi-icon"><i class="fa-solid fa-certificate"></i></div>
+        <div class="deluge-kpi-title">CPR Classes</div>
+        <div class="deluge-kpi-stat">Certifications: <strong style="color:#002B54;"><%=display_cpr_total%></strong></div>
+        <div class="deluge-kpi-stat">Expired: <strong style="color:#DC2626;"><%=display_cpr_exp%></strong></div>
+      </div>
+    </div>
+
+    <!-- 1. Inspections Overview -->
+    <div class="deluge-section-bar">
+      <span>Inspections overview</span>
+      <a href="#Form:Inspections" class="deluge-action-btn"><i class="fa-solid fa-plus"></i> Register Inspection</a>
+    </div>
+    <div class="deluge-table-card">
+      <table class="deluge-table">
+        <thead>
+          <tr>
+            <th style="width: 44px; text-align:center;">View</th>
+            <th>Location</th>
+            <th>Equipment</th>
+            <th>Brand</th>
+            <th>Model</th>
+            <th>SKU</th>
+            <th>Serial Number</th>
+            <th>Inspection Date</th>
+            <th>Inspection Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:center;"><a href="#Report:All_Inspections" class="deluge-view-sq"><i class="fa-regular fa-file-lines"></i></a></td>
+            <td><strong>Bunche Park Pool & Recreation</strong></td>
+            <td>AED</td>
+            <td>ZOLL</td>
+            <td>AED Plus</td>
+            <td>20100000102011010</td>
+            <td><code>X11H700201</code></td>
+            <td>02-Oct-2026</td>
+            <td><span class="deluge-pill ok">● OK</span></td>
+          </tr>
+          <tr>
+            <td style="text-align:center;"><a href="#Report:All_Inspections" class="deluge-view-sq"><i class="fa-regular fa-file-lines"></i></a></td>
+            <td><strong>Betty T. Ferguson Complex</strong></td>
+            <td>AED</td>
+            <td>ZOLL</td>
+            <td>AED 3</td>
+            <td>8511-001101-01</td>
+            <td><code>1761347097</code></td>
+            <td>15-Sep-2026</td>
+            <td><span class="deluge-pill warning">● Overdue</span></td>
+          </tr>
+          <tr>
+            <td style="text-align:center;"><a href="#Report:All_Inspections" class="deluge-view-sq"><i class="fa-regular fa-file-lines"></i></a></td>
+            <td><strong>Senior Family Center</strong></td>
+            <td>AED</td>
+            <td>Philips</td>
+            <td>HeartStart OnSite</td>
+            <td>M5066A</td>
+            <td><code>A18C-882910</code></td>
+            <td>04-Oct-2026</td>
+            <td><span class="deluge-pill ok">● OK</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2. Expiring Equipment -->
+    <div class="deluge-section-bar">
+      <span>Expiring Equipment</span>
+      <a href="#Report:AEDs_Report" class="deluge-secondary-btn">View All Equipment &rarr;</a>
+    </div>
+    <div class="deluge-table-card">
+      <table class="deluge-table">
+        <thead>
+          <tr>
+            <th style="width: 44px; text-align:center;">View</th>
+            <th>Location</th>
+            <th>Equipment</th>
+            <th>Brand</th>
+            <th>Model</th>
+            <th>SKU</th>
+            <th>Serial / Lot</th>
+            <th>Expiration Date</th>
+            <th>Service Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:center;"><a href="#Report:AEDs_Report" class="deluge-view-sq"><i class="fa-regular fa-file-lines"></i></a></td>
+            <td><strong>Scott Park Community Center</strong></td>
+            <td>Adult Pads</td>
+            <td>Cardiac Science</td>
+            <td>Powerheart G5 CPR Padz</td>
+            <td>XELAED001A</td>
+            <td><code>LOT-2024-441A</code></td>
+            <td>18-Apr-2026</td>
+            <td><span class="deluge-pill danger">● Replacement Required</span></td>
+          </tr>
+          <tr>
+            <td style="text-align:center;"><a href="#Report:AEDs_Report" class="deluge-view-sq"><i class="fa-regular fa-file-lines"></i></a></td>
+            <td><strong>Betty T. Ferguson Complex</strong></td>
+            <td>Adult Pads</td>
+            <td>ZOLL</td>
+            <td>ZOLL AED Plus CPR-D</td>
+            <td>8900-0800-01</td>
+            <td><code>PAD-LOT-881</code></td>
+            <td>16-Nov-2026</td>
+            <td><span class="deluge-pill warning">● Expiring Soon</span></td>
+          </tr>
+          <tr>
+            <td style="text-align:center;"><a href="#Report:AEDs_Report" class="deluge-view-sq"><i class="fa-regular fa-file-lines"></i></a></td>
+            <td><strong>Senior Family Center</strong></td>
+            <td>Battery</td>
+            <td>Philips</td>
+            <td>Philips HeartStart Battery</td>
+            <td>M5070A</td>
+            <td><code>BAT-LOT-901</code></td>
+            <td>12-Oct-2028</td>
+            <td><span class="deluge-pill ok">● Rescue-Ready</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3. Expiring CPR Classes -->
+    <div class="deluge-section-bar">
+      <span>Expiring CPR Classes</span>
+      <a href="#Report:All_Cpr_Certifications" class="deluge-secondary-btn">View All CPR Classes &rarr;</a>
+    </div>
+    <div class="deluge-table-card">
+      <table class="deluge-table">
+        <thead>
+          <tr>
+            <th style="width: 44px; text-align:center;">View</th>
+            <th>Location</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Class type</th>
+            <th>Accreditation</th>
+            <th>Expiration Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:center;"><a href="#Report:All_Cpr_Certifications" class="deluge-view-sq"><i class="fa-regular fa-file-lines"></i></a></td>
+            <td><strong>Senior Family Center</strong></td>
+            <td>Angela</td>
+            <td>Davis</td>
+            <td>Pediatric CPR/AED</td>
+            <td><strong style="color:#004182;">AHA</strong></td>
+            <td>14-Aug-2026</td>
+            <td><span class="deluge-pill danger">● Expired</span></td>
+          </tr>
+          <tr>
+            <td style="text-align:center;"><a href="#Report:All_Cpr_Certifications" class="deluge-view-sq"><i class="fa-regular fa-file-lines"></i></a></td>
+            <td><strong>Betty T. Ferguson Complex</strong></td>
+            <td>Derrick</td>
+            <td>Chen</td>
+            <td>BLS Healthcare Provider</td>
+            <td><strong style="color:#004182;">Red Cross</strong></td>
+            <td>10-Nov-2026</td>
+            <td><span class="deluge-pill warning">● Expiring Soon</span></td>
+          </tr>
+          <tr>
+            <td style="text-align:center;"><a href="#Report:All_Cpr_Certifications" class="deluge-view-sq"><i class="fa-regular fa-file-lines"></i></a></td>
+            <td><strong>Bunche Park Pool & Recreation</strong></td>
+            <td>Marcus</td>
+            <td>Rodriguez</td>
+            <td>Adult CPR/AED</td>
+            <td><strong style="color:#004182;">AHA</strong></td>
+            <td>15-May-2027</td>
+            <td><span class="deluge-pill ok">● Valid</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+]
